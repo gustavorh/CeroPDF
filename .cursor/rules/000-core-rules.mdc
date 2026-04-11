@@ -1,0 +1,64 @@
+---
+alwaysApply: true
+---
+
+# Agent Instructions
+
+Read this entire file before starting any task.
+
+**Scoped rules** (load by path): `domain.mdc` (LocalPDF product and PRD constraints), `backend.mdc` (infra, CI, static delivery — not application “API” code), `frontend.mdc` (`apps/web/**`).
+
+## Self-Correcting Rules Engine
+
+This file holds the **mechanism** for project-wide learned rules. **At session start, read the "Learned Rules" section below** (when present) **and** the **Learned Rules** in any scoped stack file that applies (`backend.mdc`, `frontend.mdc`, `domain.mdc`).
+
+### How it works
+
+1. When the user corrects you or you make a mistake, **immediately append a new rule** to the correct "Learned Rules" section: **project-wide** rules at the bottom of this file; **stack-specific** rules under `backend.mdc`, `frontend.mdc`, or `domain.mdc`.
+2. Rules are numbered sequentially and written as clear, imperative instructions.
+3. Format: `N. [CATEGORY] Never/Always do X — because Y.`
+4. Categories: `[STYLE]`, `[CODE]`, `[ARCH]`, `[TOOL]`, `[PROCESS]`, `[DATA]`, `[UX]`, `[OTHER]`
+5. Before starting any task, scan Learned Rules in this file and in applicable scoped stack files for relevant constraints.
+6. If two rules conflict, the higher-numbered (newer) rule wins.
+7. Never delete rules. If a rule becomes obsolete, append a rule that supersedes it.
+
+### When to add a rule
+
+- User explicitly corrects your output ("no, do it this way")
+- User rejects a file, approach, or pattern
+- You hit a bug caused by a wrong assumption about this codebase
+- User states a preference ("always use X", "never do Y")
+
+### Rule format example
+
+```
+14. [CODE] Use `npm` with workspaces from the repo root (`npm run dev -w web`) — this monorepo uses npm workspaces, not bun.
+15. [STYLE] Never add emojis to commit messages — project convention.
+16. [ARCH] PDF bytes are never sent to a server for processing — PRD requires 100% client-side processing.
+```
+
+**Stack-specific learned rules** belong in the matching stack file (`backend.mdc`, `frontend.mdc`, `domain.mdc`) under their own "Learned Rules" sections, using the same numbering and format.
+
+---
+
+## Universal naming conventions
+
+- **Files**: kebab-case (e.g. `workspace-store.ts`, `dropzone.tsx`, `use-thumbnails.ts`)
+- **Classes / React components**: PascalCase
+- **Interfaces / types**: PascalCase, no `I` prefix
+- **Variables / functions**: camelCase
+- **True constants**: UPPER_SNAKE_CASE
+- **Common suffixes in this repo**: `Store` (Zustand), `Props` for component props; use `Dto` only if the codebase introduces API-shaped types
+
+---
+
+## Error-handling mindset
+
+- Fail explicitly: validate assumptions, return or throw with clear cause; avoid silent catches and swallowed errors.
+- Prefer user-meaningful messages for faults that reach the UI (especially PDF parse errors, size limits, and worker failures).
+
+---
+
+## Learned Rules
+
+<!-- New rules are appended below this line. Do not edit above this section. -->

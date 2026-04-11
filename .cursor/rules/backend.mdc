@@ -1,0 +1,51 @@
+---
+description: Infra / entrega — CI, hosting estático, Next config (sin API de PDFs)
+alwaysApply: false
+globs:
+  - .github/**
+  - apps/web/next.config.ts
+  - apps/web/next.config.js
+  - apps/web/next.config.mjs
+---
+
+# Infra y entrega (LocalPDF)
+
+En este repositorio **no** hay servicio backend tipo NestJS ni carpeta `backend/` de aplicación. El **PRD** exige **100 % procesamiento de PDF en el cliente**; el servidor solo **entrega** el sitio (HTML/JS/CSS/WASM).
+
+Complementa `000-core-rules.mdc` y `domain.mdc`. Para detalle de rol, ver también `.agents/backend-developer.md`.
+
+## Qué cubre esta regla
+
+- **CI/CD:** workflows bajo `.github/**` (lint, build, despliegue).
+- **Config de Next** en `apps/web/next.config.*` que afecte export estático, base path, o compatibilidad de assets (workers, WASM).
+- **Hosting:** CDN, static hosting, o runtime mínimo de Next que **solo sirva** la app — sin endpoints que procesen PDFs.
+
+## Qué no hacemos (PRD)
+
+- **No** añadir APIs, serverless functions ni workers “de negocio” que lean o transformen PDFs en servidor.
+- **No** base de datos, auth, ni almacenamiento de documentos en backend para la v1 descrita en el PRD.
+- **No** Docker Compose para un “servicio PDF” — si aparece contenedor, es solo para **servir estáticos** o el runtime de preview, no para procesar archivos del usuario.
+
+## Privacidad
+
+- No registrar contenido de PDFs ni metadatos sensibles en logs de servidor. No diseñar endpoints de subida.
+
+## Comandos útiles (desde raíz)
+
+```bash
+npm install
+npm run build
+npm run lint
+```
+
+El build del sitio es el del workspace **`web`** (`npm run build -w web` implícito en el script raíz si está definido así).
+
+## Variables de entorno
+
+- Solo las necesarias para **build** o configuración pública del sitio. Secretos no deben usarse para un flujo de “subida de PDF” — ese flujo no existe en el modelo de producto.
+
+---
+
+## Learned Rules
+
+<!-- Append below; same format as 000-core-rules.mdc. Number sequentially within this file. -->

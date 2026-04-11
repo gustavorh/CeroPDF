@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+/**
+ * LocalPDF — design tokens
+ * Documentación: /docs/design-system.md (raíz del repo)
+ */
+
+:root {
+  /* Canvas & surfaces */
+  --background: #09090b;
+  --foreground: #fafafa;
+  --card: #18181b;
+  --card-foreground: #fafafa;
+
+  /* Typography */
+  --muted-foreground: #a1a1aa;
+  --tertiary: #71717a;
+
+  /* Borders */
+  --border: #3f3f46;
+  --border-subtle: #27272a;
+
+  /* Brand — primary actions (sky): clarity, professional tool */
+  --primary: #0284c7;
+  --primary-foreground: #f8fafc;
+  --primary-hover: #0ea5e9;
+  --primary-muted: rgb(14 165 233 / 0.14);
+
+  /* Trust / local-first (emerald) */
+  --trust: #34d399;
+  --trust-foreground: #ecfdf5;
+  --trust-muted: rgb(52 211 153 / 0.12);
+  --trust-border: rgb(52 211 153 / 0.35);
+
+  /* Semantic */
+  --success: #34d399;
+  --warning: #fbbf24;
+  --destructive: #f87171;
+  --destructive-foreground: #fef2f2;
+  --destructive-muted: rgb(248 113 113 / 0.12);
+
+  /* Focus */
+  --ring: #0ea5e9;
+  --ring-offset: #09090b;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-tertiary: var(--tertiary);
+  --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-muted: var(--primary-muted);
+  --color-trust: var(--trust);
+  --color-trust-foreground: var(--trust-foreground);
+  --color-trust-muted: var(--trust-muted);
+  --color-trust-border: var(--trust-border);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-muted: var(--destructive-muted);
+  --color-ring: var(--ring);
+  --color-ring-offset: var(--ring-offset);
+
+  --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji";
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+::selection {
+  background: var(--primary-muted);
+  color: var(--foreground);
+}

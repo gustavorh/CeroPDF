@@ -1,0 +1,14 @@
+{
+  "name": "localpdf",
+  "private": true,
+  "workspaces": ["apps/*"],
+  "scripts": {
+    "dev": "npm run dev -w web",
+    "build": "npm run build -w web",
+    "start": "npm run start -w web",
+    "lint": "npm run lint -w web"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

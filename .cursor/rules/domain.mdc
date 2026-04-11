@@ -1,0 +1,53 @@
+---
+description: LocalPDF — product domain, PRD, privacy, non-goals
+alwaysApply: false
+globs:
+  - PRD.md
+  - apps/web/**
+  - .agents/**
+---
+
+# LocalPDF — dominio de producto
+
+**LocalPDF** es una herramienta web para **unir, dividir y comprimir PDFs** de forma **rápida, privada y con fricción mínima**. El usuario no sube los archivos a un servidor de procesamiento: **todo ocurre en el navegador** (local-first).
+
+**Fuente de verdad:** [`PRD.md`](../../PRD.md) en la raíz del repositorio. Si una capacidad **no** está descrita allí, **no** se implementa salvo que el PRD se actualice por escrito.
+
+## Reglas de arquitectura (inquebrantables)
+
+- **100 % client-side:** no hay backend que procese PDFs. El host solo sirve estáticos (HTML, JS, CSS, WASM).
+- **Privacidad:** ningún PDF ni dato equivalente debe enviarse a servidores externos para procesamiento o telemetría sensible.
+- **Límites duros:** rechazo claro con mensaje UI si un archivo supera **250 MB** o el conjunto supera **500 páginas** (evitar OOM en el navegador).
+- **Stack de manipulación (PRD):** `pdf-lib` para binario; `pdf.js` para miniaturas en `<canvas>`.
+
+## Fuera de alcance (v1 / non-goals)
+
+- Base de datos, login/registro, historial en la nube.
+- Backend Node/Python (u otro) que procese PDFs.
+- OCR, edición de texto tipo procesador, firmas digitales.
+- Integración con Drive, Dropbox, etc. — solo entrada local desde el sistema de archivos.
+
+## UX obligatoria (resumen)
+
+- **Identidad visual:** paleta, tokens y principios de interfaz en [`docs/design-system.md`](../../docs/design-system.md) (producto gratuito, local-first, tono profesional).
+- **Dark mode** por defecto; UI minimalista tipo herramienta de desarrollo pulida.
+- **`/` = dropzone** como entrada principal.
+- **Feedback de estado** explícito en operaciones pesadas (cargando, parseando, renderizando, uniendo).
+- **Miniaturas:** render perezoso con **`IntersectionObserver`** (no montar todas las páginas a la vez).
+
+## Estado global (vocabulario PRD)
+
+Estructura orientativa: `documents`, `pages` (secuencia plana con referencia a documento + índice de página), `uiState` (carga, selección, errores). Alinear implementación en `apps/web` con estos conceptos.
+
+## Errores esperables en UI
+
+- PDF ilegible o con contraseña: mensaje claro tipo toast según PRD.
+- Operaciones pesadas: **Web Workers** cuando sea posible; evitar bloqueo prolongado del hilo UI.
+
+---
+
+## Learned Rules
+
+<!-- Append below; same format as 000-core-rules.mdc. Number sequentially within this file. -->
+
+1. [ARCH] When the team asks for “backend” or “real upload” for LocalPDF, implement PDF parse/merge/export in `apps/web` (client-only per PRD) — the host never receives file bytes; “upload” in the UI is local `File` selection, not a server endpoint.

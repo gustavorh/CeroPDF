@@ -1,0 +1,89 @@
+---
+description: LocalPDF web app — Next.js apps/web, client-first PDF, Zustand
+alwaysApply: false
+globs:
+  - apps/web/**
+---
+
+# Frontend (`apps/web`)
+
+Complementa `000-core-rules.mdc` y el dominio en `domain.mdc`. Monorepo **`localpdf`**: paquete principal en **`apps/web`** (Next.js 15, React 19, TypeScript **strict**). Archivos **kebab-case**; componentes **PascalCase**; `import type` para imports solo de tipos.
+
+**Alias:** `@/*` → `apps/web/src/*` (ver `tsconfig.json`).
+
+**Layout habitual:** `src/app/` (App Router), `src/components/`, `src/lib/`, `src/stores/`.
+
+**Tooling:** módulos ESNext; target efectivo **ES2017** en `tsconfig` del paquete. No hay Prettier obligatorio en el repo; sigue **ESLint** del paquete (`eslint.config.mjs`).
+
+## Arquitectura de producto (PRD)
+
+- **Procesamiento de PDF solo en el cliente:** `pdf-lib` en el navegador; **no** enviar PDFs a un API para merge/split/compresión.
+- **Miniaturas:** `pdf.js` en `<canvas>` con carga perezosa (**`IntersectionObserver`**).
+- **Estado global:** **Zustand** (`src/stores/`), alineado al modelo `documents` / `pages` / `uiState` del PRD.
+- **Rendimiento:** operaciones pesadas de `pdf-lib` en **Web Worker** cuando sea posible; si no, fragmentar para no congelar la UI.
+
+## App Router y límites cliente/servidor
+
+- Por defecto, los componentes son **Server Components**. Añade **`'use client'`** cuando necesites estado local, efectos, listeners del DOM, APIs del navegador (`File`, `URL.createObjectURL`, canvas, workers), o `pdf-lib` / `pdf.js`.
+- La mayoría del “editor” vivirá en **Client Components** o hojas cliente pequeñas para no hidratar de más innecesariamente.
+
+## Datos y “API”
+
+- **No** hay backend de aplicación en este producto para procesar PDFs. **No** diseñes Server Actions ni rutas API que reciban bytes de documentos para transformarlos en servidor.
+- Variables de entorno: solo configuración de build o pública del sitio si el proyecto las introduce; nunca como canal para subir PDFs.
+
+## UI y estilo
+
+- **Tailwind CSS v4** (`src/app/globals.css`, utilidades en componentes).
+- **Dark mode** por defecto; interfaz minimalista acorde al PRD.
+- **Design system LocalPDF:** paleta, principios y tokens semánticos documentados en **`docs/design-system.md`**. Los colores y variables viven en **`apps/web/src/app/globals.css`** (`:root` + `@theme inline`); al añadir UI nueva, **reutiliza esos tokens** (`bg-primary`, `text-muted-foreground`, `border-border`, `text-trust`, etc.) en lugar de hex o `zinc-*` ad hoc salvo excepción local justificada.
+- Preferir componentes accesibles (etiquetas, foco, roles) en controles interactivos.
+
+## Rendimiento y UX
+
+- Indicadores de progreso en cargas largas (parse, render masivo, export).
+- Validar **250 MB / 500 páginas** en cliente con mensajes claros antes de cargar todo en memoria cuando sea posible.
+
+## Errores
+
+- Superficie de fallos explícita: parse de `pdf-lib`, límites, fallos de worker; sin `catch` vacíos en flujos de usuario.
+
+## Build y run
+
+Desde la **raíz del repo**:
+
+```bash
+npm install
+npm run dev
+```
+
+Equivale a `npm run dev -w web` (script en `package.json` raíz).
+
+Desde **`apps/web`**:
+
+```bash
+npm install
+npm run dev
+npm run build
+npm run start
+```
+
+`dev` usa **Turbopack** (`next dev --turbopack`) según `apps/web/package.json`.
+
+## Lint
+
+```bash
+npm run lint
+```
+
+Desde raíz ejecuta el lint del workspace `web`. Corrige issues en los archivos que toques.
+
+---
+
+## Learned Rules
+
+<!-- Append below; same format as 000-core-rules.mdc. Number sequentially within this file. -->
+
+1. [UX] Before introducing new UI colors or spacing patterns in `apps/web`, read **`docs/design-system.md`** and extend **`apps/web/src/app/globals.css`** tokens instead of ad-hoc hex/`zinc-*` — keeps LocalPDF branded and consistent for end users.
+2. [DATA] Never pass the canonical `ArrayBuffer` stored for `pdf-lib` directly to `pdfjs.getDocument({ data })` without copying (e.g. `bytes.slice(0)`) — pdf.js can transfer/detach the buffer to the worker, breaking later `PDFDocument.load` with “detached ArrayBuffer”.
+3. [ARCH] Deduplicate `pdfjs.getDocument` per document id when many thumbnails mount at once — concurrent loads can each call `setCachedPdfJsDocument`, destroying the previous `PDFDocumentProxy` and breaking other tiles; use one in-flight `Promise` per id. Treat `RenderingCancelledException` from cancelled renders as non-fatal; keep the `<canvas>` mounted so retries still have a ref.
