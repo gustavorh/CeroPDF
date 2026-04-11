@@ -1,0 +1,44 @@
+# =============================================================================
+# CeroPDF - Herramienta web de manipulación de PDFs 100% Client-Side
+# =============================================================================
+# Integrado con SafeLine WAF como reverse proxy
+# Cloudflared proporciona SSL/TLS
+# =============================================================================
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: ceropdf-web
+    restart: unless-stopped
+    # Exposed only on localhost for Safeline WAF
+    ports:
+      - "127.0.0.1:3002:3000"
+    environment:
+      - NODE_ENV=production
+      - TZ=America/Santiago
+    networks:
+      - safeline-ce
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "com.ceropdf.description=CeroPDF - PDF Tool 100% Client-Side"
+      - "com.ceropdf.version=1.0.0"
+      - "com.safeline.service=true"
+      - "com.safeline.hostname=ceropdf.gustavorh.com"
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  safeline-ce:
+    external: true
+    name: safeline-ce
