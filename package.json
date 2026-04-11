@@ -1,5 +1,5 @@
 {
-  "name": "localpdf",
+  "name": "ceropdf",
   "private": true,
   "workspaces": ["apps/*"],
   "scripts": {

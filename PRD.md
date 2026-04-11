@@ -1,10 +1,10 @@
-# 🧭 Product Requirements Document (PRD): LocalPDF v1.0
+# 🧭 Product Requirements Document (PRD): CeroPDF v1.0
 
 **Contexto para el Agente de IA (Cursor/Kimi):** Este documento es la fuente absoluta de la verdad. Si una funcionalidad no está descrita aquí, **NO** debe ser implementada. Las reglas de arquitectura (100% Client-Side) son inquebrantables.
 
 ## 1. Visión del Producto (North Star)
 
-**LocalPDF** es una herramienta web de manipulación de PDFs hiper-rápida, privada y de fricción cero. Resuelve el problema de los usuarios que necesitan unir, dividir o comprimir documentos pesados y sensibles sin tener que subirlos a servidores de terceros, evitando límites de tamaño abusivos y paywalls. Todo el procesamiento ocurre en el navegador del usuario (Local-First).
+**CeroPDF** es una herramienta web de manipulación de PDFs hiper-rápida, privada y de fricción cero. Resuelve el problema de los usuarios que necesitan unir, dividir o comprimir documentos pesados y sensibles sin tener que subirlos a servidores de terceros, evitando límites de tamaño abusivos y paywalls. Todo el procesamiento ocurre en el navegador del usuario (Local-First).
 
 ## 2. Arquitectura y Restricciones Técnicas (Reglas Inquebrantables)
 

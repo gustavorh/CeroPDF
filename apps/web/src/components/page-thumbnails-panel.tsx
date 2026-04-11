@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { loadPdfJsDocument } from "@/lib/pdf/load-pdfjs-document";
 import { isBenignPdfPreviewError } from "@/lib/pdf/pdf-preview-errors";
@@ -14,6 +20,97 @@ type PageThumbnailTileProps = {
   selected: boolean;
 };
 
+function IconTrash({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M3 6h18" />
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+      <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+    </svg>
+  );
+}
+
+function IconRotateCw({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M21 12a9 9 0 1 1-3-6.7" />
+      <path d="M21 3v7h-7" />
+    </svg>
+  );
+}
+
+function IconEyeOff({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+      <path d="m1 1 22 22" />
+    </svg>
+  );
+}
+
+function IconEye({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+function IconRotateCcw({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M3 12a9 9 0 1 0 3-6.7" />
+      <path d="M3 3v7h7" />
+    </svg>
+  );
+}
+
 function PageThumbnailTile({
   documentId,
   bytes,
@@ -21,7 +118,12 @@ function PageThumbnailTile({
   selected,
 }: PageThumbnailTileProps) {
   const selectPageEntry = useWorkspaceStore((s) => s.selectPageEntry);
+  const removePageEntry = useWorkspaceStore((s) => s.removePageEntry);
   const togglePageHidden = useWorkspaceStore((s) => s.togglePageHidden);
+  const rotatePageClockwise = useWorkspaceStore((s) => s.rotatePageClockwise);
+  const rotatePageCounterClockwise = useWorkspaceStore(
+    (s) => s.rotatePageCounterClockwise,
+  );
 
   const rootRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -47,11 +149,14 @@ function PageThumbnailTile({
   useEffect(() => {
     if (!visible) return;
     let cancelled = false;
+    const { beginThumbnailRender, endThumbnailRender } =
+      useWorkspaceStore.getState();
 
     const run = async () => {
       const canvas = canvasRef.current;
       if (!canvas) return;
       setRenderError(null);
+      beginThumbnailRender();
       try {
         const pdf = await loadPdfJsDocument(documentId, bytes);
         if (cancelled) return;
@@ -61,7 +166,9 @@ function PageThumbnailTile({
         const base = page.getViewport({ scale: 1 });
         const targetWidth = 156;
         const scale = targetWidth / base.width;
-        const viewport = page.getViewport({ scale });
+        const combined =
+          (((page.rotate ?? 0) + (entry.rotation ?? 0)) % 360 + 360) % 360;
+        const viewport = page.getViewport({ scale, rotation: combined });
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
         canvas.width = Math.floor(viewport.width);
@@ -76,6 +183,8 @@ function PageThumbnailTile({
         renderTaskRef.current = null;
         if (cancelled || isBenignPdfPreviewError(err)) return;
         setRenderError("Vista previa no disponible");
+      } finally {
+        endThumbnailRender();
       }
     };
     void run();
@@ -84,58 +193,166 @@ function PageThumbnailTile({
       renderTaskRef.current?.cancel();
       renderTaskRef.current = null;
     };
-  }, [visible, documentId, bytes, entry.sourcePageIndex]);
+  }, [visible, documentId, bytes, entry.sourcePageIndex, entry.rotation]);
 
   return (
     <div
       ref={rootRef}
-      className={`flex flex-col overflow-hidden rounded-lg border bg-card/70 text-left transition ${
+      className={`group/tile relative flex flex-col overflow-hidden rounded-md bg-surface-container-low text-left transition will-change-transform ${
         entry.hidden ? "opacity-40" : ""
       } ${
         selected
-          ? "border-primary ring-2 ring-primary/50"
-          : "border-border hover:border-muted-foreground/40"
+          ? "ring-2 ring-primary/55 ring-offset-2 ring-offset-background"
+          : "ring-1 ring-outline-variant/30"
       }`}
     >
-      <button
-        type="button"
-        onClick={(e) =>
-          selectPageEntry(entry.id, { shiftKey: e.shiftKey })
-        }
-        className="group flex w-full flex-col text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-      >
-        <div className="relative flex aspect-[3/4] items-center justify-center bg-background/80">
+      <div className="flex w-full flex-col">
+        <div className="relative flex aspect-[3/4] items-center justify-center bg-background/70">
           <canvas
             ref={canvasRef}
-            className={`max-h-full max-w-full object-contain ${
+            className={`relative z-0 max-h-full max-w-full object-contain pointer-events-none ${
               renderError ? "opacity-0" : "opacity-100"
             }`}
-            aria-label={`Página ${entry.sourcePageIndex + 1}`}
+            aria-hidden
+          />
+          <button
+            type="button"
+            draggable={false}
+            aria-label={`Seleccionar página ${entry.sourcePageIndex + 1}`}
+            className="absolute inset-0 z-[1] bg-transparent focus-visible:z-[4] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
+            onClick={(e) =>
+              selectPageEntry(entry.id, { shiftKey: e.shiftKey })
+            }
           />
           {renderError ? (
-            <span className="pointer-events-none absolute inset-0 flex items-center justify-center px-2 text-center font-mono text-[10px] text-muted-foreground">
+            <span className="pointer-events-none absolute inset-0 z-[2] flex items-center justify-center px-2 text-center font-mono text-[10px] text-muted-foreground">
               {renderError}
             </span>
           ) : null}
+
+          <div
+            draggable={false}
+            className="pointer-events-none absolute inset-0 z-[3] flex items-center justify-center opacity-0 transition-opacity group-hover/tile:opacity-100"
+            onDragStart={(e) => e.stopPropagation()}
+          >
+            <div
+              draggable={false}
+              className="pointer-events-auto flex items-center gap-1 rounded-md border border-outline-variant/40 bg-surface-container/95 p-1 shadow-lg backdrop-blur-sm"
+              onDragStart={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                title="Rotar en sentido antihorario"
+                className="rounded-sm p-2 text-foreground transition hover:bg-primary-muted hover:text-primary"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  rotatePageCounterClockwise(entry.id);
+                }}
+              >
+                <IconRotateCcw className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                title="Rotar 90°"
+                className="rounded-sm p-2 text-foreground transition hover:bg-primary-muted hover:text-primary"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  rotatePageClockwise(entry.id);
+                }}
+              >
+                <IconRotateCw className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                title={
+                  entry.hidden
+                    ? "Incluir de nuevo en el PDF final"
+                    : "Excluir del PDF final (sigue en el lienzo)"
+                }
+                className="rounded-sm p-2 text-muted-foreground transition hover:bg-surface-bright hover:text-foreground"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  togglePageHidden(entry.id);
+                }}
+              >
+                {entry.hidden ? (
+                  <IconEye className="h-4 w-4" />
+                ) : (
+                  <IconEyeOff className="h-4 w-4" />
+                )}
+              </button>
+              <button
+                type="button"
+                title="Quitar esta página de la secuencia"
+                className="rounded-sm p-2 text-destructive transition hover:bg-destructive-muted"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removePageEntry(entry.id);
+                }}
+              >
+                <IconTrash className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
         </div>
-        <span className="border-t border-border px-2 py-1.5 font-mono text-[10px] text-muted-foreground group-hover:text-foreground">
-          Página {entry.sourcePageIndex + 1}
-          {entry.hidden ? " · excluida" : ""}
-        </span>
-      </button>
-      <div className="flex gap-1 border-t border-border px-2 py-1.5">
         <button
           type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            togglePageHidden(entry.id);
-          }}
-          className="flex-1 rounded border border-border px-1 py-0.5 font-mono text-[10px] text-muted-foreground hover:border-muted-foreground/50"
+          draggable={false}
+          className="bg-surface-container-highest/50 px-2 py-1.5 text-left font-mono text-[10px] text-muted-foreground transition hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          onClick={(e) =>
+            selectPageEntry(entry.id, { shiftKey: e.shiftKey })
+          }
         >
-          {entry.hidden ? "Incluir" : "Excluir"}
+          Página {entry.sourcePageIndex + 1}
+          {entry.hidden ? " · excluida" : ""}
         </button>
       </div>
     </div>
+  );
+}
+
+type ThumbnailGridItemProps = {
+  documentId: string;
+  bytes: ArrayBuffer;
+  entry: PageEntry;
+  selected: boolean;
+  localIndex: number;
+  onDropAtLocalIndex: (e: React.DragEvent, targetLocalIndex: number) => void;
+  allowDrop: (e: React.DragEvent) => void;
+};
+
+function ThumbnailGridItem({
+  documentId,
+  bytes,
+  entry,
+  selected,
+  localIndex,
+  onDropAtLocalIndex,
+  allowDrop,
+}: ThumbnailGridItemProps) {
+  const [dragging, setDragging] = useState(false);
+
+  return (
+    <li
+      draggable
+      onDragStart={(e) => {
+        setDragging(true);
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", String(localIndex));
+      }}
+      onDragEnd={() => setDragging(false)}
+      className={`flex flex-col ${dragging ? "cursor-grabbing opacity-[0.85]" : "cursor-grab"}`}
+      onDragEnter={allowDrop}
+      onDragOver={allowDrop}
+      onDrop={(e) => onDropAtLocalIndex(e, localIndex)}
+    >
+      <PageThumbnailTile
+        documentId={documentId}
+        bytes={bytes}
+        entry={entry}
+        selected={selected}
+      />
+    </li>
   );
 }
 
@@ -178,52 +395,26 @@ export function PageThumbnailsPanel({ documentId }: PageThumbnailsPanelProps) {
 
   if (!bytes) {
     return (
-      <div className="border-t border-border-subtle bg-background/50 px-4 py-4 font-mono text-xs text-muted-foreground">
+      <div className="bg-surface-container-low/90 px-4 py-4 font-mono text-xs text-muted-foreground">
         Sin datos en memoria para este documento.
       </div>
     );
   }
 
   return (
-    <div className="space-y-3 border-t border-border-subtle bg-background/50 px-4 py-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="font-mono text-[11px] text-muted-foreground">
-          Miniaturas · usa la barra ⋮⋮ para arrastrar y reordenar · Shift+clic
-          para seleccionar
-        </p>
-        <p className="font-mono text-[11px] text-tertiary">
-          Render perezoso (IntersectionObserver)
-        </p>
-      </div>
-      <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-        {entries.map((entry, localIndex) => (
-          <li
-            key={entry.id}
-            className="flex flex-col gap-1"
-            onDragEnter={allowDrop}
-            onDragOver={allowDrop}
-            onDrop={(e) => onDropAtLocalIndex(e, localIndex)}
-          >
-            <div
-              className="flex cursor-grab select-none items-center justify-center rounded-md border border-border bg-card/80 py-1 font-mono text-xs text-tertiary active:cursor-grabbing"
-              draggable
-              title="Arrastrar para reordenar páginas"
-              onDragStart={(e) => {
-                e.dataTransfer.effectAllowed = "move";
-                e.dataTransfer.setData("text/plain", String(localIndex));
-              }}
-            >
-              ⋮⋮
-            </div>
-            <PageThumbnailTile
-              documentId={documentId}
-              bytes={bytes}
-              entry={entry}
-              selected={selectedPageIds.includes(entry.id)}
-            />
-          </li>
-        ))}
-      </ul>
-    </div>
+    <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+      {entries.map((entry, localIndex) => (
+        <ThumbnailGridItem
+          key={entry.id}
+          documentId={documentId}
+          bytes={bytes}
+          entry={entry}
+          selected={selectedPageIds.includes(entry.id)}
+          localIndex={localIndex}
+          onDropAtLocalIndex={onDropAtLocalIndex}
+          allowDrop={allowDrop}
+        />
+      ))}
+    </ul>
   );
 }

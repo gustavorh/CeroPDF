@@ -1,30 +1,41 @@
 @import "tailwindcss";
 
 /**
- * LocalPDF — design tokens
- * Documentación: /docs/design-system.md (raíz del repo)
+ * CeroPDF — design tokens (“The Digital Blueprint”)
+ * Documentación: /docs/design-system.md
  */
 
 :root {
-  /* Canvas & surfaces */
-  --background: #09090b;
-  --foreground: #fafafa;
-  --card: #18181b;
-  --card-foreground: #fafafa;
+  /* Ink & paper — base canvas (#111316, no pure black) */
+  --background: #111316;
+  --foreground: #f4f4f5;
 
-  /* Typography */
-  --muted-foreground: #a1a1aa;
-  --tertiary: #71717a;
+  /* Tonal lift: card < container < bright */
+  --card: #1a1d22;
+  --card-foreground: #f4f4f5;
+  --surface-container-low: #171a1f;
+  --surface-container: #1e2228;
+  --surface-bright: #262a32;
+  --surface-container-highest: #2c313a;
 
-  /* Borders */
-  --border: #3f3f46;
-  --border-subtle: #27272a;
+  --muted-foreground: #9ca3af;
+  --tertiary: #6b7280;
 
-  /* Brand — primary actions (sky): clarity, professional tool */
-  --primary: #0284c7;
-  --primary-foreground: #f8fafc;
-  --primary-hover: #0ea5e9;
-  --primary-muted: rgb(14 165 233 / 0.14);
+  /* Ghost borders — prefer tonal separation; use sparingly */
+  --outline-variant: rgb(244 244 245 / 0.12);
+  --border: rgb(244 244 245 / 0.08);
+  --border-subtle: rgb(244 244 245 / 0.05);
+
+  /* Brand — terracotta / earth (primary CTAs) */
+  --primary: #f0a88c;
+  --primary-foreground: #1c1412;
+  --primary-hover: #ffc9b5;
+  --primary-muted: rgb(240 168 140 / 0.16);
+  --primary-container: #8b4d3a;
+
+  /* Secondary surfaces (muted warm) */
+  --secondary-container: #2a2624;
+  --on-secondary-container: #e8e2dd;
 
   /* Trust / local-first (emerald) */
   --trust: #34d399;
@@ -34,14 +45,17 @@
 
   /* Semantic */
   --success: #34d399;
-  --warning: #fbbf24;
+  --warning: #e3b341;
   --destructive: #f87171;
   --destructive-foreground: #fef2f2;
   --destructive-muted: rgb(248 113 113 / 0.12);
 
-  /* Focus */
-  --ring: #0ea5e9;
-  --ring-offset: #09090b;
+  /* Focus ring — primary hue */
+  --ring: #f0a88c;
+  --ring-offset: #111316;
+
+  /* Ambient shadow (floating layers) */
+  --shadow-ambient: rgb(17 19 22 / 0.45);
 }
 
 @theme inline {
@@ -49,14 +63,22 @@
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
+  --color-surface-container-low: var(--surface-container-low);
+  --color-surface-container: var(--surface-container);
+  --color-surface-bright: var(--surface-bright);
+  --color-surface-container-highest: var(--surface-container-highest);
   --color-muted-foreground: var(--muted-foreground);
   --color-tertiary: var(--tertiary);
+  --color-outline-variant: var(--outline-variant);
   --color-border: var(--border);
   --color-border-subtle: var(--border-subtle);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary-hover: var(--primary-hover);
   --color-primary-muted: var(--primary-muted);
+  --color-primary-container: var(--primary-container);
+  --color-secondary-container: var(--secondary-container);
+  --color-on-secondary-container: var(--on-secondary-container);
   --color-trust: var(--trust);
   --color-trust-foreground: var(--trust-foreground);
   --color-trust-muted: var(--trust-muted);
@@ -69,10 +91,49 @@
   --color-ring: var(--ring);
   --color-ring-offset: var(--ring-offset);
 
-  --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
-    "Segoe UI Emoji";
+  --font-sans: var(--font-public-sans), ui-sans-serif, system-ui, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji";
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
     "Liberation Mono", monospace;
+
+  --radius-md: 0.375rem;
+  --radius-sm: 0.125rem;
+}
+
+/* Editorial scale — see docs/design-system.md (tipografía) */
+@utility text-display-lg {
+  font-size: clamp(1.875rem, 4.5vw, 2.75rem);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+
+@utility text-headline-md {
+  font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+
+@utility text-body-lg {
+  font-size: 1.0625rem;
+  line-height: 1.65;
+}
+
+@utility text-label-md {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+@utility text-label-sm {
+  font-size: 0.625rem;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 html {
@@ -88,4 +149,19 @@ body {
 ::selection {
   background: var(--primary-muted);
   color: var(--foreground);
+}
+
+/* Confetti burst (export success — dopamina sin dependencias) */
+@keyframes ceropdf-confetti {
+  0% {
+    transform: translate3d(0, -12vh, 0) rotate(0deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(0, 88vh, 0) rotate(560deg);
+    opacity: 0;
+  }
 }

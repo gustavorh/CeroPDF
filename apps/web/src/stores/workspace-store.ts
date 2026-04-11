@@ -2,6 +2,10 @@ import { PDFDocument } from "pdf-lib";
 import { create } from "zustand";
 
 import { MAX_COMBINED_PAGES, MAX_FILE_BYTES } from "@/lib/constants";
+import {
+  buildExportDownloadFilename,
+  defaultProjectDisplayName,
+} from "@/lib/project-display-name";
 import { exportMergedPdf } from "@/lib/pdf/export-workspace-pdf";
 import { invalidatePdfJsDocument } from "@/lib/pdf/pdfjs-document-cache";
 import type { PageEntry, WorkspaceDocument } from "@/types/workspace";
@@ -13,18 +17,26 @@ export type UiPhase =
   | "parsing"
   | "rendering"
   | "merging"
+  | "export_success"
   | "error";
 
 type WorkspaceState = {
+  /** Nombre editable del proyecto en el lienzo; si es null, se deriva del primer PDF. */
+  projectName: string | null;
   documents: WorkspaceDocument[];
   pageEntries: PageEntry[];
   expandedDocumentIds: string[];
   uiPhase: UiPhase;
+  /** Miniaturas pdf.js en curso (PRD §4 feedback “Renderizando”). */
+  thumbnailRenderCount: number;
   optimizeSize: boolean;
   lastError: string | null;
   /** Páginas seleccionadas para extracción (ids de `pageEntries`). */
   selectedPageIds: string[];
   selectionAnchorId: string | null;
+
+  beginThumbnailRender: () => void;
+  endThumbnailRender: () => void;
 
   addDocumentsFromFiles: (files: FileList | File[]) => Promise<void>;
   removeDocument: (id: string) => void;
@@ -38,6 +50,11 @@ type WorkspaceState = {
     fromLocalIndex: number,
     toLocalIndex: number,
   ) => void;
+  setProjectName: (name: string) => void;
+  removePageEntry: (entryId: string) => void;
+  rotatePageClockwise: (entryId: string) => void;
+  rotatePageCounterClockwise: (entryId: string) => void;
+  resetWorkspace: () => void;
   setOptimizeSize: (value: boolean) => void;
   setUiPhase: (phase: UiPhase) => void;
   clearError: () => void;
@@ -66,6 +83,7 @@ function buildPageEntries(documentId: string, pageCount: number): PageEntry[] {
       documentId,
       sourcePageIndex: i,
       hidden: false,
+      rotation: 0,
     });
   }
   return out;
@@ -86,16 +104,75 @@ function regroupPageEntries(
 }
 
 export const useWorkspaceStore = create<WorkspaceState>()((set, get) => ({
+  projectName: null,
   documents: [],
   pageEntries: [],
   expandedDocumentIds: [],
   uiPhase: "idle",
+  thumbnailRenderCount: 0,
   optimizeSize: false,
   lastError: null,
   selectedPageIds: [],
   selectionAnchorId: null,
 
+  beginThumbnailRender: () =>
+    set((s) => ({
+      thumbnailRenderCount: s.thumbnailRenderCount + 1,
+    })),
+
+  endThumbnailRender: () =>
+    set((s) => ({
+      thumbnailRenderCount: Math.max(0, s.thumbnailRenderCount - 1),
+    })),
+
   clearError: () => set({ lastError: null }),
+
+  setProjectName: (name) => set({ projectName: name.trim() || null }),
+
+  removePageEntry: (entryId) =>
+    set((s) => ({
+      pageEntries: s.pageEntries.filter((e) => e.id !== entryId),
+      selectedPageIds: s.selectedPageIds.filter((id) => id !== entryId),
+      selectionAnchorId:
+        s.selectionAnchorId === entryId ? null : s.selectionAnchorId,
+    })),
+
+  rotatePageClockwise: (entryId) =>
+    set((s) => ({
+      pageEntries: s.pageEntries.map((e) =>
+        e.id === entryId
+          ? { ...e, rotation: ((e.rotation ?? 0) + 90) % 360 }
+          : e,
+      ),
+    })),
+
+  rotatePageCounterClockwise: (entryId) =>
+    set((s) => ({
+      pageEntries: s.pageEntries.map((e) =>
+        e.id === entryId
+          ? { ...e, rotation: ((e.rotation ?? 0) - 90 + 360) % 360 }
+          : e,
+      ),
+    })),
+
+  resetWorkspace: () => {
+    const { documents } = get();
+    for (const d of documents) {
+      invalidatePdfJsDocument(d.id);
+    }
+    set({
+      projectName: null,
+      documents: [],
+      pageEntries: [],
+      expandedDocumentIds: [],
+      uiPhase: "idle",
+      thumbnailRenderCount: 0,
+      optimizeSize: false,
+      lastError: null,
+      selectedPageIds: [],
+      selectionAnchorId: null,
+    });
+  },
 
   clearSelection: () => set({ selectedPageIds: [], selectionAnchorId: null }),
 
@@ -131,7 +208,7 @@ export const useWorkspaceStore = create<WorkspaceState>()((set, get) => ({
       try {
         const bytes = await file.arrayBuffer();
         set({ uiPhase: "parsing" });
-        const pdf = await PDFDocument.load(bytes);
+        const pdf = await PDFDocument.load(bytes, { updateMetadata: false });
         const pageCount = pdf.getPageCount();
         parsed.push({ file, bytes, pageCount });
       } catch {
@@ -166,12 +243,17 @@ export const useWorkspaceStore = create<WorkspaceState>()((set, get) => ({
       buildPageEntries(d.id, d.pageCount),
     );
 
-    set((s) => ({
-      documents: [...s.documents, ...newDocs],
-      pageEntries: [...s.pageEntries, ...newEntries],
-      uiPhase: "idle",
-      lastError: null,
-    }));
+    set((s) => {
+      const mergedDocs = [...s.documents, ...newDocs];
+      return {
+        documents: mergedDocs,
+        pageEntries: [...s.pageEntries, ...newEntries],
+        uiPhase: "idle",
+        lastError: null,
+        projectName:
+          s.projectName ?? defaultProjectDisplayName(mergedDocs),
+      };
+    });
   },
 
   removeDocument: (id) => {
@@ -275,16 +357,22 @@ export const useWorkspaceStore = create<WorkspaceState>()((set, get) => ({
   setUiPhase: (uiPhase) => set({ uiPhase }),
 
   exportPdf: async () => {
-    const { pageEntries, documents, optimizeSize, selectedPageIds } = get();
+    const { pageEntries, documents, optimizeSize, selectedPageIds, projectName } =
+      get();
     const useSelection = selectedPageIds.length > 0;
 
-    const pages: { documentId: string; sourcePageIndex: number }[] = [];
+    const pages: {
+      documentId: string;
+      sourcePageIndex: number;
+      rotation: number;
+    }[] = [];
     for (const e of pageEntries) {
       if (e.hidden) continue;
       if (useSelection && !selectedPageIds.includes(e.id)) continue;
       pages.push({
         documentId: e.documentId,
         sourcePageIndex: e.sourcePageIndex,
+        rotation: e.rotation ?? 0,
       });
     }
 
@@ -310,13 +398,12 @@ export const useWorkspaceStore = create<WorkspaceState>()((set, get) => ({
       });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      const stamp = new Date().toISOString().replace(/[:.]/g, "-");
       a.href = url;
-      a.download = `localpdf-${stamp}.pdf`;
+      a.download = buildExportDownloadFilename(projectName, documents);
       a.click();
       URL.revokeObjectURL(url);
       set({
-        uiPhase: "idle",
+        uiPhase: "export_success",
         selectedPageIds: [],
         selectionAnchorId: null,
       });

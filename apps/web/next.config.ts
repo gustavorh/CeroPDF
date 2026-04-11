@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 /**
- * CSP tuned for LocalPDF: same-origin app + pdf.js blob workers/canvas, no remote exfil.
+ * CSP tuned for CeroPDF: same-origin app + pdf.js blob workers/canvas, no remote exfil.
  * Applied only when NODE_ENV=production (Next `next build` / `next start`).
  */
 const productionCsp = [

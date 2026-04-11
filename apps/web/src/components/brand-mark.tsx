@@ -7,7 +7,7 @@ type BrandMarkProps = {
 export function BrandMark({ className, ...props }: BrandMarkProps) {
   return (
     <div
-      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/10 shadow-sm shadow-primary/10 ${className ?? ""}`}
+      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-primary/30 bg-primary-muted ${className ?? ""}`}
       {...props}
     >
       <svg

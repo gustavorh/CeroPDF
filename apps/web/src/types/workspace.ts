@@ -6,6 +6,8 @@ export type PageEntry = {
   sourcePageIndex: number;
   /** Excluded from export (PRD Feature 3). */
   hidden: boolean;
+  /** Rotación adicional en grados (0, 90, 180, 270) para vista previa y exportación. */
+  rotation: number;
 };
 
 /** Parsed PDF on the canvas (metadata + bytes in memory). */
