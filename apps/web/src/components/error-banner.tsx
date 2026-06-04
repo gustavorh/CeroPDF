@@ -1,10 +1,10 @@
 "use client";
 
-import { useWorkspaceStore } from "@/stores/workspace-store";
+import { useDocumentStore } from "@/stores/document-store";
 
 export function ErrorBanner() {
-  const lastError = useWorkspaceStore((s) => s.lastError);
-  const clearError = useWorkspaceStore((s) => s.clearError);
+  const lastError = useDocumentStore((s) => s.lastError);
+  const clearError = useDocumentStore((s) => s.clearError);
 
   if (!lastError) return null;
 

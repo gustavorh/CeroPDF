@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { useWorkspaceStore } from "@/stores/workspace-store";
+import { useDocumentStore } from "@/stores/document-store";
+import { useMergeStore } from "@/stores/merge-store";
 
 function ConfettiLayer({ active }: { active: boolean }) {
   const bits = useMemo(
@@ -44,8 +45,8 @@ function ConfettiLayer({ active }: { active: boolean }) {
 
 /** Estado 3: overlay durante exportación y pantalla de éxito con opción de reiniciar. */
 export function ExportFlowModal() {
-  const uiPhase = useWorkspaceStore((s) => s.uiPhase);
-  const resetWorkspace = useWorkspaceStore((s) => s.resetWorkspace);
+  const uiPhase = useDocumentStore((s) => s.uiPhase);
+  const resetWorkspace = useMergeStore((s) => s.resetWorkspace);
 
   const open = uiPhase === "merging" || uiPhase === "export_success";
   const success = uiPhase === "export_success";

@@ -1,4 +1,7 @@
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
+
+const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 /**
  * CSP tuned for CeroPDF: same-origin app + pdf.js blob workers/canvas, no remote exfil.
@@ -23,6 +26,7 @@ const productionCsp = [
 const nextConfig: NextConfig = {
   output: "standalone",
   reactStrictMode: true,
+  transpilePackages: ["@ceropdf/pdf-core", "@ceropdf/pdf-render", "@ceropdf/ui"],
   async headers() {
     const base: { key: string; value: string }[] = [
       { key: "X-Content-Type-Options", value: "nosniff" },
@@ -48,4 +52,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

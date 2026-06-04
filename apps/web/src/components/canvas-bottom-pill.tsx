@@ -1,14 +1,15 @@
 "use client";
 
-import { useWorkspaceStore } from "@/stores/workspace-store";
+import { useDocumentStore } from "@/stores/document-store";
+import { useMergeStore } from "@/stores/merge-store";
 import { formatBytes } from "@/lib/format-bytes";
 
 /** Píldora flotante: contexto de documentos, páginas y tamaño estimado. */
 export function CanvasBottomPill() {
-  const documents = useWorkspaceStore((s) => s.documents);
-  const pageEntries = useWorkspaceStore((s) => s.pageEntries);
-  const optimizeSize = useWorkspaceStore((s) => s.optimizeSize);
-  const setOptimizeSize = useWorkspaceStore((s) => s.setOptimizeSize);
+  const documents = useDocumentStore((s) => s.documents);
+  const pageEntries = useMergeStore((s) => s.pageEntries);
+  const optimizeSize = useMergeStore((s) => s.optimizeSize);
+  const setOptimizeSize = useMergeStore((s) => s.setOptimizeSize);
 
   const visiblePages = pageEntries.filter((e) => !e.hidden).length;
   const totalBytes = documents.reduce((acc, d) => acc + d.sizeBytes, 0);

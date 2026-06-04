@@ -1,7 +1,7 @@
 "use client";
 
-import { useWorkspaceStore } from "@/stores/workspace-store";
-import type { UiPhase } from "@/stores/workspace-store";
+import { useDocumentStore } from "@/stores/document-store";
+import type { UiPhase } from "@/stores/document-store";
 
 const PHASE_LABEL: Record<UiPhase, string> = {
   idle: "Todo listo",
@@ -31,8 +31,8 @@ function resolveDisplayPhase(
 }
 
 export function StatusStrip() {
-  const uiPhase = useWorkspaceStore((s) => s.uiPhase);
-  const thumbnailRenderCount = useWorkspaceStore((s) => s.thumbnailRenderCount);
+  const uiPhase = useDocumentStore((s) => s.uiPhase);
+  const thumbnailRenderCount = useDocumentStore((s) => s.thumbnailRenderCount);
   const displayPhase = resolveDisplayPhase(uiPhase, thumbnailRenderCount);
 
   const busy =
