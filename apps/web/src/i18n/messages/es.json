@@ -1,0 +1,68 @@
+{
+  "common": {
+    "brand": "CeroPDF",
+    "githubAria": "GitHub — perfil gustavorh (se abre en una pestaña nueva)",
+    "github": "GitHub",
+    "openTool": "Abrir herramienta →",
+    "available": "Disponible",
+    "comingSoon": "Próximamente",
+    "languageSwitcher": "Idioma",
+    "languageEs": "Español",
+    "languageEn": "English"
+  },
+  "metadata": {
+    "siteTitleDefault": "CeroPDF — PDFs en el navegador, gratis y privados",
+    "siteTitleTemplate": "{title} | CeroPDF",
+    "siteDescription": "Une, divide y optimiza PDFs en segundos. Gratis, sin cuenta y 100 % en tu dispositivo: tus archivos no se suben para procesarse."
+  },
+  "hero": {
+    "chip": "100 % en tu dispositivo",
+    "title": "Herramientas PDF gratuitas que no suben tus archivos a la nube.",
+    "subtitle": "Une, divide y organiza tus PDFs en segundos. Todo el procesamiento ocurre en tu navegador: sin cuenta, sin servidor, sin huella."
+  },
+  "footer": {
+    "tagline": "Tus PDFs, tu equipo. Sin subidas a la nube.",
+    "subtagline": "Une y optimiza en segundos, gratis y sin cuenta.",
+    "privacy": "Privacidad",
+    "security": "Seguridad"
+  },
+  "tools": {
+    "ariaLabel": "Herramientas PDF",
+    "merge": {
+      "name": "Unir PDF",
+      "description": "Combina varios PDFs en uno. Ordena, rota y excluye páginas antes de exportar."
+    },
+    "split": {
+      "name": "Dividir PDF",
+      "description": "Separa un PDF por rangos de páginas o extrae páginas en archivos sueltos."
+    },
+    "edit": {
+      "name": "Editar PDF",
+      "description": "Añade texto, rectángulos y resaltados encima de tu PDF. Las anotaciones quedan grabadas al exportar."
+    },
+    "extract": {
+      "name": "Extraer páginas",
+      "description": "Selecciona páginas concretas y genera un PDF nuevo solo con esas."
+    },
+    "compress": {
+      "name": "Comprimir PDF",
+      "description": "Reduce el tamaño manteniendo legible texto e imágenes. Ideal para enviar por correo. Requiere servidor opcional."
+    },
+    "officeToPdf": {
+      "name": "Office a PDF",
+      "description": "Convierte Word, Excel, PowerPoint y OpenDocument a PDF con LibreOffice. Requiere servidor opcional."
+    },
+    "mediaConvert": {
+      "name": "Convertir audio y video",
+      "description": "Convierte entre MP3, WAV, OGG, M4A, FLAC, Opus, MP4 y WebM. 100 % en tu navegador con ffmpeg.wasm."
+    },
+    "imageConvert": {
+      "name": "PDF ↔ Imágenes",
+      "description": "Exporta cada página como JPG/PNG o convierte una colección de imágenes en un PDF."
+    },
+    "secure": {
+      "name": "Proteger PDF",
+      "description": "Añade contraseña o marca de agua, o quita la protección de un PDF que ya tienes."
+    }
+  }
+}

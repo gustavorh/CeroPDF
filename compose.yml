@@ -1,8 +1,11 @@
 # =============================================================================
-# CeroPDF - Herramienta web de manipulación de PDFs 100% Client-Side
+# CeroPDF — Herramienta web de manipulación de PDFs
 # =============================================================================
-# Integrado con SafeLine WAF como reverse proxy
-# Cloudflared proporciona SSL/TLS
+# - `web`   → Next.js standalone, 100 % client-side por defecto.
+#             Expuesta vía SafeLine WAF (proxy reverso) en localhost.
+# - `heavy` → Sidecar opcional con Ghostscript + qpdf para operaciones
+#             que no funcionan en navegador (compresión real, desbloqueo).
+#             Sólo accesible desde la red interna; nunca expuesta al público.
 # =============================================================================
 
 services:
@@ -19,8 +22,15 @@ services:
     environment:
       - NODE_ENV=production
       - TZ=America/Santiago
+      # Apunta al sidecar via DNS interna de Docker.
+      - HEAVY_API_URL=http://heavy:3001
     networks:
       - safeline-ce
+      - ceropdf-internal
+    depends_on:
+      heavy:
+        condition: service_healthy
+        required: false
     volumes:
       - /etc/localtime:/etc/localtime:ro
     healthcheck:
@@ -30,10 +40,44 @@ services:
       retries: 3
       start_period: 40s
     labels:
-      - "com.ceropdf.description=CeroPDF - PDF Tool 100% Client-Side"
-      - "com.ceropdf.version=1.0.0"
+      - "com.ceropdf.description=CeroPDF - PDF Tool"
+      - "com.ceropdf.version=1.1.0"
       - "com.safeline.service=true"
       - "com.safeline.hostname=ceropdf.gustavorh.com"
+
+  heavy:
+    build:
+      context: .
+      dockerfile: apps/heavy/Dockerfile
+      target: production
+    container_name: ceropdf-heavy
+    restart: unless-stopped
+    # No ports publicados — sólo accesible vía red interna `ceropdf-internal`.
+    environment:
+      - NODE_ENV=production
+      - TZ=America/Santiago
+      - PORT=3001
+      # Tope de tamaño por request (bytes). Default 250 MB.
+      - MAX_REQUEST_BYTES=262144000
+      # Timeout por comando ghostscript/qpdf (ms). Default 90s.
+      - COMMAND_TIMEOUT_MS=90000
+      # Timeout para conversión LibreOffice (ms). Default 120s (arranque en frío).
+      - OFFICE_TIMEOUT_MS=120000
+      # TTL de artefactos en /tmp; un reaper borra lo más viejo. Default 60 min.
+      - SCRATCH_TTL_MS=3600000
+    networks:
+      - ceropdf-internal
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    labels:
+      - "com.ceropdf.description=CeroPDF - Heavy jobs sidecar (Ghostscript + qpdf)"
+      - "com.ceropdf.internal=true"
 
 # =============================================================================
 # Networks
@@ -42,3 +86,6 @@ networks:
   safeline-ce:
     external: true
     name: safeline-ce
+  ceropdf-internal:
+    driver: bridge
+    internal: false

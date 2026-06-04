@@ -17,6 +17,7 @@ const eslintConfig = [
       "out/**",
       "next-env.d.ts",
       "public/pdf.worker.min.mjs",
+      "public/ffmpeg/**",
       "scripts/**",
     ],
   },

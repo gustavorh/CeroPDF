@@ -7,10 +7,18 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "node scripts/copy-pdf-worker.cjs"
+    "postinstall": "node scripts/copy-pdf-worker.cjs && node scripts/copy-ffmpeg-core.cjs"
   },
   "dependencies": {
+    "@ceropdf/pdf-core": "*",
+    "@ceropdf/pdf-render": "*",
+    "@ceropdf/ui": "*",
+    "@ffmpeg/core": "^0.12.10",
+    "@ffmpeg/ffmpeg": "^0.12.15",
+    "@ffmpeg/util": "^0.12.2",
+    "fflate": "^0.8.2",
     "next": "^15.3.0",
+    "next-intl": "^3.26.5",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^4.10.38",
     "react": "^19.0.0",

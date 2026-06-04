@@ -3,9 +3,10 @@
 import { useCallback, useId, useRef } from "react";
 
 import { defaultProjectDisplayName } from "@/lib/project-display-name";
-import { useWorkspaceStore } from "@/stores/workspace-store";
+import { BrandMark } from "@ceropdf/ui";
 
-import { BrandMark } from "./brand-mark";
+import { useDocumentStore } from "@/stores/document-store";
+import { useMergeStore } from "@/stores/merge-store";
 
 function IconPencil({ className }: { className?: string }) {
   return (
@@ -29,12 +30,12 @@ export function CanvasHeader() {
   const inputId = useId();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const projectName = useWorkspaceStore((s) => s.projectName);
-  const documents = useWorkspaceStore((s) => s.documents);
-  const setProjectName = useWorkspaceStore((s) => s.setProjectName);
-  const addDocumentsFromFiles = useWorkspaceStore((s) => s.addDocumentsFromFiles);
-  const exportPdf = useWorkspaceStore((s) => s.exportPdf);
-  const uiPhase = useWorkspaceStore((s) => s.uiPhase);
+  const projectName = useMergeStore((s) => s.projectName);
+  const documents = useDocumentStore((s) => s.documents);
+  const setProjectName = useMergeStore((s) => s.setProjectName);
+  const addDocumentsFromFiles = useMergeStore((s) => s.addDocumentsFromFiles);
+  const exportPdf = useMergeStore((s) => s.exportPdf);
+  const uiPhase = useDocumentStore((s) => s.uiPhase);
 
   const derivedTitle = defaultProjectDisplayName(documents);
   const titleValue = projectName ?? derivedTitle;

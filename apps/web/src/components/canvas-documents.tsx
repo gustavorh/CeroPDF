@@ -2,16 +2,17 @@
 
 import { useRef } from "react";
 
-import { useWorkspaceStore } from "@/stores/workspace-store";
+import { useDocumentStore } from "@/stores/document-store";
+import { useMergeStore } from "@/stores/merge-store";
 import { formatBytes } from "@/lib/format-bytes";
 
 import { PageThumbnailsPanel } from "./page-thumbnails-panel";
 
 /** Lienzo (estado 2): secciones por PDF con cabecera ancha y cuadrícula de miniaturas. */
 export function CanvasDocuments() {
-  const documents = useWorkspaceStore((s) => s.documents);
-  const reorderDocuments = useWorkspaceStore((s) => s.reorderDocuments);
-  const removeDocument = useWorkspaceStore((s) => s.removeDocument);
+  const documents = useDocumentStore((s) => s.documents);
+  const reorderDocuments = useMergeStore((s) => s.reorderDocuments);
+  const removeDocument = useMergeStore((s) => s.removeDocument);
 
   const dragFrom = useRef<number | null>(null);
 

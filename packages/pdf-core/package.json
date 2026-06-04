@@ -1,0 +1,40 @@
+{
+  "name": "@ceropdf/pdf-core",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./constants": {
+      "types": "./src/constants.ts",
+      "default": "./src/constants.ts"
+    },
+    "./merge": {
+      "types": "./src/merge.ts",
+      "default": "./src/merge.ts"
+    },
+    "./storage": {
+      "types": "./src/storage/types.ts",
+      "default": "./src/storage/types.ts"
+    },
+    "./storage/opfs": {
+      "types": "./src/storage/opfs.ts",
+      "default": "./src/storage/opfs.ts"
+    }
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "pdf-lib": "^1.17.1"
+  },
+  "devDependencies": {
+    "pdf-lib": "^1.17.1",
+    "typescript": "^5",
+    "vitest": "^2.1.9"
+  }
+}

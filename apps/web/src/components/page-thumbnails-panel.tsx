@@ -8,9 +8,11 @@ import {
   useState,
 } from "react";
 
-import { loadPdfJsDocument } from "@/lib/pdf/load-pdfjs-document";
-import { isBenignPdfPreviewError } from "@/lib/pdf/pdf-preview-errors";
-import { useWorkspaceStore } from "@/stores/workspace-store";
+import { readDocumentBytes } from "@ceropdf/pdf-core";
+import { isBenignPdfPreviewError, loadPdfJsDocument } from "@ceropdf/pdf-render";
+import { useDocumentStore } from "@/stores/document-store";
+import { useMergeStore } from "@/stores/merge-store";
+import { useSelectionStore } from "@/stores/selection-store";
 import type { PageEntry } from "@/types/workspace";
 
 type PageThumbnailTileProps = {
@@ -117,11 +119,11 @@ function PageThumbnailTile({
   entry,
   selected,
 }: PageThumbnailTileProps) {
-  const selectPageEntry = useWorkspaceStore((s) => s.selectPageEntry);
-  const removePageEntry = useWorkspaceStore((s) => s.removePageEntry);
-  const togglePageHidden = useWorkspaceStore((s) => s.togglePageHidden);
-  const rotatePageClockwise = useWorkspaceStore((s) => s.rotatePageClockwise);
-  const rotatePageCounterClockwise = useWorkspaceStore(
+  const selectPageEntry = useMergeStore((s) => s.selectPageEntry);
+  const removePageEntry = useMergeStore((s) => s.removePageEntry);
+  const togglePageHidden = useMergeStore((s) => s.togglePageHidden);
+  const rotatePageClockwise = useMergeStore((s) => s.rotatePageClockwise);
+  const rotatePageCounterClockwise = useMergeStore(
     (s) => s.rotatePageCounterClockwise,
   );
 
@@ -150,7 +152,7 @@ function PageThumbnailTile({
     if (!visible) return;
     let cancelled = false;
     const { beginThumbnailRender, endThumbnailRender } =
-      useWorkspaceStore.getState();
+      useDocumentStore.getState();
 
     const run = async () => {
       const canvas = canvasRef.current;
@@ -361,15 +363,28 @@ type PageThumbnailsPanelProps = {
 };
 
 export function PageThumbnailsPanel({ documentId }: PageThumbnailsPanelProps) {
-  const documents = useWorkspaceStore((s) => s.documents);
-  const pageEntries = useWorkspaceStore((s) => s.pageEntries);
-  const selectedPageIds = useWorkspaceStore((s) => s.selectedPageIds);
-  const reorderPageEntriesInDocument = useWorkspaceStore(
+  const documents = useDocumentStore((s) => s.documents);
+  const pageEntries = useMergeStore((s) => s.pageEntries);
+  const selectedPageIds = useSelectionStore((s) => s.selectedIds);
+  const reorderPageEntriesInDocument = useMergeStore(
     (s) => s.reorderPageEntriesInDocument,
   );
 
   const doc = documents.find((d) => d.id === documentId);
-  const bytes = doc?.bytes;
+  const backing = doc?.backing;
+  const [bytes, setBytes] = useState<ArrayBuffer | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setBytes(null);
+    if (!backing) return;
+    void readDocumentBytes(backing).then((b) => {
+      if (!cancelled) setBytes(b);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [backing]);
 
   const entries = useMemo(
     () => pageEntries.filter((e) => e.documentId === documentId),
@@ -393,10 +408,18 @@ export function PageThumbnailsPanel({ documentId }: PageThumbnailsPanelProps) {
     e.dataTransfer.dropEffect = "move";
   }, []);
 
+  if (!backing) {
+    return (
+      <div className="bg-surface-container-low/90 px-4 py-4 font-mono text-xs text-muted-foreground">
+        Sin datos para este documento.
+      </div>
+    );
+  }
+
   if (!bytes) {
     return (
       <div className="bg-surface-container-low/90 px-4 py-4 font-mono text-xs text-muted-foreground">
-        Sin datos en memoria para este documento.
+        Cargando vista previa…
       </div>
     );
   }

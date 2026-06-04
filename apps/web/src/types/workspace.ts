@@ -1,20 +1,22 @@
-/** One page in the flat export sequence (PRD §6). */
+import type { DocumentBacking } from "@ceropdf/pdf-core";
+
+/** One page in the flat export sequence. */
 export type PageEntry = {
   id: string;
   documentId: string;
   /** 0-based page index in the source PDF */
   sourcePageIndex: number;
-  /** Excluded from export (PRD Feature 3). */
+  /** Excluded from export. */
   hidden: boolean;
   /** Rotación adicional en grados (0, 90, 180, 270) para vista previa y exportación. */
   rotation: number;
 };
 
-/** Parsed PDF on the canvas (metadata + bytes in memory). */
+/** Parsed PDF on the canvas. Bytes live either in memory (small) or in OPFS (large). */
 export type WorkspaceDocument = {
   id: string;
   name: string;
   sizeBytes: number;
-  bytes: ArrayBuffer;
   pageCount: number;
+  backing: DocumentBacking;
 };
