@@ -17,6 +17,14 @@
       "types": "./src/merge.ts",
       "default": "./src/merge.ts"
     },
+    "./split": {
+      "types": "./src/split.ts",
+      "default": "./src/split.ts"
+    },
+    "./annotate": {
+      "types": "./src/annotate.ts",
+      "default": "./src/annotate.ts"
+    },
     "./storage": {
       "types": "./src/storage/types.ts",
       "default": "./src/storage/types.ts"
