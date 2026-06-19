@@ -1,5 +1,6 @@
 {
   "name": "ceropdf",
+  "description": "CeroPDF — free, local-first PDF tools that run in the browser. npm workspaces monorepo.",
   "private": true,
   "workspaces": ["apps/*", "packages/*"],
   "scripts": {
