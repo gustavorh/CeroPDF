@@ -17,11 +17,11 @@ export type ExportPageRef = {
   documentId: string;
   /** 0-based index in the source PDF */
   sourcePageIndex: number;
-  /** Rotación de salida en grados (0, 90, 180, 270). */
+  /** Output rotation in degrees (0, 90, 180, 270). */
   rotation: number;
-  /** Redimensionado uniforme, aplicado antes de rotación/recorte. */
+  /** Resize directive, applied before rotation/crop. `size` may change the aspect ratio. */
   resize?: ResizeDirective;
-  /** Recorte en coordenadas de página normalizadas. */
+  /** Crop box in normalized page coordinates. */
   crop?: CropRect;
 };
 

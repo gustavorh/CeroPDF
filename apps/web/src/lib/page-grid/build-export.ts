@@ -3,13 +3,13 @@ import type { ExportPageRef, ResizeDirective } from "@ceropdf/pdf-core";
 import type { PageEntry } from "@/types/workspace";
 
 export type BuildExportOptions = {
-  /** Cuando trae ids, solo esas entries se exportan (extraer). Vacío/ausente = todas las visibles. */
+  /** When it carries ids, only those entries are exported (extract). Empty/absent = all visible. */
   selectedIds?: ReadonlySet<string>;
-  /** Redimensionado uniforme aplicado a cada página exportada. */
+  /** Resize directive applied uniformly to every exported page. */
   resize?: ResizeDirective;
 };
 
-/** Convierte las page entries visibles/seleccionadas (en orden) en export refs. */
+/** Converts the visible/selected page entries (in order) into export refs. */
 export function buildExportRefs(
   entries: PageEntry[],
   opts: BuildExportOptions = {},
@@ -31,7 +31,7 @@ export function buildExportRefs(
   return refs;
 }
 
-/** Mueve una página dentro de su documento. Puro: devuelve un array nuevo (o el mismo si no hay cambio). */
+/** Moves a page within its document. Pure: returns a new array (or the same one if unchanged). */
 export function reorderInDocument(
   entries: PageEntry[],
   documentId: string,
@@ -62,7 +62,7 @@ export function reorderInDocument(
   return next;
 }
 
-/** Reagrupa las entries para seguir un nuevo orden de documentos. Puro. */
+/** Reorders entries to follow a new document order. Pure. `documentOrder` must contain every entry's documentId; entries whose documentId is absent are dropped. */
 export function regroupByDocumentOrder(
   entries: PageEntry[],
   documentOrder: string[],

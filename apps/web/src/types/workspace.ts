@@ -10,7 +10,7 @@ export type PageEntry = {
   hidden: boolean;
   /** Rotación adicional en grados (0, 90, 180, 270) para vista previa y exportación. */
   rotation: number;
-  /** Recorte normalizado 0–1 en espacio de página sin rotar. Ausente = sin recorte. */
+  /** Normalized crop 0–1 in unrotated page space. Absent means no crop. */
   crop?: CropRect;
 };
 

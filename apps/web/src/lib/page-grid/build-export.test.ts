@@ -80,4 +80,13 @@ describe("regroupByDocumentOrder", () => {
     const next = regroupByDocumentOrder(entries, ["B", "A"]);
     expect(next.map((e) => e.id)).toEqual(["b0", "a0", "a1"]);
   });
+
+  it("drops entries whose documentId is absent from the order", () => {
+    const entries = [
+      entry({ id: "a0", documentId: "A" }),
+      entry({ id: "b0", documentId: "B" }),
+    ];
+    const next = regroupByDocumentOrder(entries, ["A"]);
+    expect(next.map((e) => e.id)).toEqual(["a0"]);
+  });
 });
