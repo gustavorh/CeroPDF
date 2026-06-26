@@ -1,11 +1,28 @@
 import { degrees, PDFDocument } from "pdf-lib";
 
+export type CropRect = {
+  /** Normalized 0–1 against the (post-resize) page size, PDF user space
+   *  (origin bottom-left), measured on the unrotated page. */
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+export type ResizeDirective =
+  | { kind: "size"; width: number; height: number } // target size in PDF points
+  | { kind: "scale"; factor: number };
+
 export type ExportPageRef = {
   documentId: string;
   /** 0-based index in the source PDF */
   sourcePageIndex: number;
   /** Rotación de salida en grados (0, 90, 180, 270). */
   rotation: number;
+  /** Redimensionado uniforme, aplicado antes de rotación/recorte. */
+  resize?: ResizeDirective;
+  /** Recorte en coordenadas de página normalizadas. */
+  crop?: CropRect;
 };
 
 /** Callback used by the merger to fetch bytes per document. May be async (OPFS) or sync (memory). */
@@ -50,9 +67,26 @@ export async function exportMergedPdf(
     }
     const copied = await out.copyPages(src, [ref.sourcePageIndex]);
     for (const page of copied) {
-      const rot = ((ref.rotation ?? 0) % 360 + 360) % 360;
+      if (ref.resize) {
+        if (ref.resize.kind === "scale") {
+          page.scale(ref.resize.factor, ref.resize.factor);
+        } else {
+          const { width, height } = page.getSize();
+          page.scale(ref.resize.width / width, ref.resize.height / height);
+        }
+      }
+      const rot = (((ref.rotation ?? 0) % 360) + 360) % 360;
       if (rot !== 0) {
         page.setRotation(degrees(rot));
+      }
+      if (ref.crop) {
+        const { width, height } = page.getSize();
+        page.setCropBox(
+          ref.crop.x * width,
+          ref.crop.y * height,
+          ref.crop.width * width,
+          ref.crop.height * height,
+        );
       }
       out.addPage(page);
     }
