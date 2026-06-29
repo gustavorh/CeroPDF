@@ -52,6 +52,21 @@ describe("createPageGridStore — page ops", () => {
     expect(useStore.getState().pageEntries[0].hidden).toBe(true);
   });
 
+  it("rotates a page counterclockwise", () => {
+    const useStore = createPageGridStore(CONFIG);
+    useStore.setState({ pageEntries: [entry({ id: "p1" })] });
+    useStore.getState().rotatePageCounterClockwise("p1");
+    expect(useStore.getState().pageEntries[0].rotation).toBe(270);
+  });
+
+  it("treats a same-index reorder as a no-op", () => {
+    const useStore = createPageGridStore(CONFIG);
+    const entries = [entry({ id: "p1" }), entry({ id: "p2", sourcePageIndex: 1 })];
+    useStore.setState({ pageEntries: entries });
+    useStore.getState().reorderPageEntriesInDocument("d1", 0, 0);
+    expect(useStore.getState().pageEntries.map((e) => e.id)).toEqual(["p1", "p2"]);
+  });
+
   it("removes a page entry and prunes the selection", () => {
     const useStore = createPageGridStore(CONFIG);
     useStore.setState({ pageEntries: [entry({ id: "p1" }), entry({ id: "p2", sourcePageIndex: 1 })] });

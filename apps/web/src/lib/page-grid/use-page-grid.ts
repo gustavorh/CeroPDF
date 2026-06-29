@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-import { exportMergedPdf, readDocumentBytes } from "@ceropdf/pdf-core";
+import { readDocumentBytes } from "@ceropdf/pdf-core";
 
 import { triggerDownload } from "@/lib/trigger-download";
 import {
@@ -179,6 +179,7 @@ export function createPageGridStore(config: PageGridConfig) {
       useDocumentStore.getState().clearError();
 
       try {
+        const { exportMergedPdf } = await import("@ceropdf/pdf-core");
         const docsById = new Map(documents.map((d) => [d.id, d]));
         const pdfBytes = await exportMergedPdf(
           refs,
