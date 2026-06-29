@@ -75,6 +75,34 @@ describe("createPageGridStore — page ops", () => {
     expect(useStore.getState().pageEntries.map((e) => e.id)).toEqual(["p2"]);
     expect(useSelectionStore.getState().selectedIds).toEqual(["p2"]);
   });
+
+  it("removeDocument drops its page entries and prunes the selection", () => {
+    const useStore = createPageGridStore(CONFIG);
+    useDocumentStore.setState({
+      documents: [
+        { id: "A", name: "a.pdf", sizeBytes: 1, pageCount: 1, backing: { kind: "memory", bytes: new ArrayBuffer(0) } },
+        { id: "B", name: "b.pdf", sizeBytes: 1, pageCount: 1, backing: { kind: "memory", bytes: new ArrayBuffer(0) } },
+      ],
+    });
+    useStore.setState({ pageEntries: [entry({ id: "a0", documentId: "A" }), entry({ id: "b0", documentId: "B" })] });
+    useSelectionStore.setState({ selectedIds: ["a0", "b0"], anchorId: "a0" });
+    useStore.getState().removeDocument("A");
+    expect(useStore.getState().pageEntries.map((e) => e.id)).toEqual(["b0"]);
+    expect(useSelectionStore.getState().selectedIds).toEqual(["b0"]);
+  });
+
+  it("reorderDocuments reorders pages to follow the new document order", () => {
+    const useStore = createPageGridStore(CONFIG);
+    useDocumentStore.setState({
+      documents: [
+        { id: "A", name: "a.pdf", sizeBytes: 1, pageCount: 1, backing: { kind: "memory", bytes: new ArrayBuffer(0) } },
+        { id: "B", name: "b.pdf", sizeBytes: 1, pageCount: 1, backing: { kind: "memory", bytes: new ArrayBuffer(0) } },
+      ],
+    });
+    useStore.setState({ pageEntries: [entry({ id: "a0", documentId: "A" }), entry({ id: "b0", documentId: "B" })] });
+    useStore.getState().reorderDocuments(0, 1);
+    expect(useStore.getState().pageEntries.map((e) => e.id)).toEqual(["b0", "a0"]);
+  });
 });
 
 describe("createPageGridStore — exportPdf semantics", () => {
