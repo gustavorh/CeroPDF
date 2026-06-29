@@ -1,25 +1,23 @@
 "use client";
 
 import {
-  useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from "react";
 
-import { readDocumentBytes } from "@ceropdf/pdf-core";
 import { isBenignPdfPreviewError, loadPdfJsDocument } from "@ceropdf/pdf-render";
 import { useDocumentStore } from "@/stores/document-store";
-import { useMergeStore } from "@/stores/merge-store";
-import { useSelectionStore } from "@/stores/selection-store";
 import type { PageEntry } from "@/types/workspace";
+import type { UsePageGridStore, Capabilities } from "@/lib/page-grid/use-page-grid";
 
 type PageThumbnailTileProps = {
   documentId: string;
   bytes: ArrayBuffer;
   entry: PageEntry;
   selected: boolean;
+  store: UsePageGridStore;
+  capabilities: Capabilities;
 };
 
 function IconTrash({ className }: { className?: string }) {
@@ -113,19 +111,19 @@ function IconRotateCcw({ className }: { className?: string }) {
   );
 }
 
-function PageThumbnailTile({
+export function PageThumbnailTile({
   documentId,
   bytes,
   entry,
   selected,
+  store: useStore,
+  capabilities,
 }: PageThumbnailTileProps) {
-  const selectPageEntry = useMergeStore((s) => s.selectPageEntry);
-  const removePageEntry = useMergeStore((s) => s.removePageEntry);
-  const togglePageHidden = useMergeStore((s) => s.togglePageHidden);
-  const rotatePageClockwise = useMergeStore((s) => s.rotatePageClockwise);
-  const rotatePageCounterClockwise = useMergeStore(
-    (s) => s.rotatePageCounterClockwise,
-  );
+  const selectPageEntry = useStore((s) => s.selectPageEntry);
+  const removePageEntry = useStore((s) => s.removePageEntry);
+  const togglePageHidden = useStore((s) => s.togglePageHidden);
+  const rotatePageClockwise = useStore((s) => s.rotatePageClockwise);
+  const rotatePageCounterClockwise = useStore((s) => s.rotatePageCounterClockwise);
 
   const rootRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -222,9 +220,9 @@ function PageThumbnailTile({
             draggable={false}
             aria-label={`Seleccionar página ${entry.sourcePageIndex + 1}`}
             className="absolute inset-0 z-[1] bg-transparent focus-visible:z-[4] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
-            onClick={(e) =>
-              selectPageEntry(entry.id, { shiftKey: e.shiftKey })
-            }
+            onClick={(e) => {
+              if (capabilities.canSelect) selectPageEntry(entry.id, { shiftKey: e.shiftKey });
+            }}
           />
           {renderError ? (
             <span className="pointer-events-none absolute inset-0 z-[2] flex items-center justify-center px-2 text-center font-mono text-[10px] text-muted-foreground">
@@ -242,58 +240,66 @@ function PageThumbnailTile({
               className="pointer-events-auto flex items-center gap-1 rounded-md border border-outline-variant/40 bg-surface-container/95 p-1 shadow-lg backdrop-blur-sm"
               onDragStart={(e) => e.stopPropagation()}
             >
-              <button
-                type="button"
-                title="Rotar en sentido antihorario"
-                className="rounded-sm p-2 text-foreground transition hover:bg-primary-muted hover:text-primary"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  rotatePageCounterClockwise(entry.id);
-                }}
-              >
-                <IconRotateCcw className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                title="Rotar 90°"
-                className="rounded-sm p-2 text-foreground transition hover:bg-primary-muted hover:text-primary"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  rotatePageClockwise(entry.id);
-                }}
-              >
-                <IconRotateCw className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                title={
-                  entry.hidden
-                    ? "Incluir de nuevo en el PDF final"
-                    : "Excluir del PDF final (sigue en el lienzo)"
-                }
-                className="rounded-sm p-2 text-muted-foreground transition hover:bg-surface-bright hover:text-foreground"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  togglePageHidden(entry.id);
-                }}
-              >
-                {entry.hidden ? (
-                  <IconEye className="h-4 w-4" />
-                ) : (
-                  <IconEyeOff className="h-4 w-4" />
-                )}
-              </button>
-              <button
-                type="button"
-                title="Quitar esta página de la secuencia"
-                className="rounded-sm p-2 text-destructive transition hover:bg-destructive-muted"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  removePageEntry(entry.id);
-                }}
-              >
-                <IconTrash className="h-4 w-4" />
-              </button>
+              {capabilities.canRotate && (
+                <>
+                  <button
+                    type="button"
+                    title="Rotar en sentido antihorario"
+                    className="rounded-sm p-2 text-foreground transition hover:bg-primary-muted hover:text-primary"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      rotatePageCounterClockwise(entry.id);
+                    }}
+                  >
+                    <IconRotateCcw className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    title="Rotar 90°"
+                    className="rounded-sm p-2 text-foreground transition hover:bg-primary-muted hover:text-primary"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      rotatePageClockwise(entry.id);
+                    }}
+                  >
+                    <IconRotateCw className="h-4 w-4" />
+                  </button>
+                </>
+              )}
+              {capabilities.canHide && (
+                <button
+                  type="button"
+                  title={
+                    entry.hidden
+                      ? "Incluir de nuevo en el PDF final"
+                      : "Excluir del PDF final (sigue en el lienzo)"
+                  }
+                  className="rounded-sm p-2 text-muted-foreground transition hover:bg-surface-bright hover:text-foreground"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    togglePageHidden(entry.id);
+                  }}
+                >
+                  {entry.hidden ? (
+                    <IconEye className="h-4 w-4" />
+                  ) : (
+                    <IconEyeOff className="h-4 w-4" />
+                  )}
+                </button>
+              )}
+              {capabilities.canRemove && (
+                <button
+                  type="button"
+                  title="Quitar esta página de la secuencia"
+                  className="rounded-sm p-2 text-destructive transition hover:bg-destructive-muted"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removePageEntry(entry.id);
+                  }}
+                >
+                  <IconTrash className="h-4 w-4" />
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -301,143 +307,14 @@ function PageThumbnailTile({
           type="button"
           draggable={false}
           className="bg-surface-container-highest/50 px-2 py-1.5 text-left font-mono text-[10px] text-muted-foreground transition hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-          onClick={(e) =>
-            selectPageEntry(entry.id, { shiftKey: e.shiftKey })
-          }
+          onClick={(e) => {
+            if (capabilities.canSelect) selectPageEntry(entry.id, { shiftKey: e.shiftKey });
+          }}
         >
           Página {entry.sourcePageIndex + 1}
           {entry.hidden ? " · excluida" : ""}
         </button>
       </div>
     </div>
-  );
-}
-
-type ThumbnailGridItemProps = {
-  documentId: string;
-  bytes: ArrayBuffer;
-  entry: PageEntry;
-  selected: boolean;
-  localIndex: number;
-  onDropAtLocalIndex: (e: React.DragEvent, targetLocalIndex: number) => void;
-  allowDrop: (e: React.DragEvent) => void;
-};
-
-function ThumbnailGridItem({
-  documentId,
-  bytes,
-  entry,
-  selected,
-  localIndex,
-  onDropAtLocalIndex,
-  allowDrop,
-}: ThumbnailGridItemProps) {
-  const [dragging, setDragging] = useState(false);
-
-  return (
-    <li
-      draggable
-      onDragStart={(e) => {
-        setDragging(true);
-        e.dataTransfer.effectAllowed = "move";
-        e.dataTransfer.setData("text/plain", String(localIndex));
-      }}
-      onDragEnd={() => setDragging(false)}
-      className={`flex flex-col ${dragging ? "cursor-grabbing opacity-[0.85]" : "cursor-grab"}`}
-      onDragEnter={allowDrop}
-      onDragOver={allowDrop}
-      onDrop={(e) => onDropAtLocalIndex(e, localIndex)}
-    >
-      <PageThumbnailTile
-        documentId={documentId}
-        bytes={bytes}
-        entry={entry}
-        selected={selected}
-      />
-    </li>
-  );
-}
-
-type PageThumbnailsPanelProps = {
-  documentId: string;
-};
-
-export function PageThumbnailsPanel({ documentId }: PageThumbnailsPanelProps) {
-  const documents = useDocumentStore((s) => s.documents);
-  const pageEntries = useMergeStore((s) => s.pageEntries);
-  const selectedPageIds = useSelectionStore((s) => s.selectedIds);
-  const reorderPageEntriesInDocument = useMergeStore(
-    (s) => s.reorderPageEntriesInDocument,
-  );
-
-  const doc = documents.find((d) => d.id === documentId);
-  const backing = doc?.backing;
-  const [bytes, setBytes] = useState<ArrayBuffer | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    setBytes(null);
-    if (!backing) return;
-    void readDocumentBytes(backing).then((b) => {
-      if (!cancelled) setBytes(b);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [backing]);
-
-  const entries = useMemo(
-    () => pageEntries.filter((e) => e.documentId === documentId),
-    [pageEntries, documentId],
-  );
-
-  const onDropAtLocalIndex = useCallback(
-    (e: React.DragEvent, targetLocalIndex: number) => {
-      e.preventDefault();
-      const raw = e.dataTransfer.getData("text/plain");
-      const from = Number.parseInt(raw, 10);
-      if (Number.isNaN(from)) return;
-      if (from === targetLocalIndex) return;
-      reorderPageEntriesInDocument(documentId, from, targetLocalIndex);
-    },
-    [documentId, reorderPageEntriesInDocument],
-  );
-
-  const allowDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-  }, []);
-
-  if (!backing) {
-    return (
-      <div className="bg-surface-container-low/90 px-4 py-4 font-mono text-xs text-muted-foreground">
-        Sin datos para este documento.
-      </div>
-    );
-  }
-
-  if (!bytes) {
-    return (
-      <div className="bg-surface-container-low/90 px-4 py-4 font-mono text-xs text-muted-foreground">
-        Cargando vista previa…
-      </div>
-    );
-  }
-
-  return (
-    <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-      {entries.map((entry, localIndex) => (
-        <ThumbnailGridItem
-          key={entry.id}
-          documentId={documentId}
-          bytes={bytes}
-          entry={entry}
-          selected={selectedPageIds.includes(entry.id)}
-          localIndex={localIndex}
-          onDropAtLocalIndex={onDropAtLocalIndex}
-          allowDrop={allowDrop}
-        />
-      ))}
-    </ul>
   );
 }

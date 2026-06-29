@@ -3,10 +3,10 @@
 import { useRef } from "react";
 
 import { useDocumentStore } from "@/stores/document-store";
-import { useMergeStore } from "@/stores/merge-store";
+import { useMergeStore, MERGE_CAPS } from "@/stores/merge-store";
 import { formatBytes } from "@/lib/format-bytes";
 
-import { PageThumbnailsPanel } from "./page-thumbnails-panel";
+import { PageGrid } from "./page-grid/page-grid";
 
 /** Lienzo (estado 2): secciones por PDF con cabecera ancha y cuadrícula de miniaturas. */
 export function CanvasDocuments() {
@@ -84,7 +84,7 @@ export function CanvasDocuments() {
             </div>
           </div>
 
-          <PageThumbnailsPanel documentId={doc.id} />
+          <PageGrid documentId={doc.id} store={useMergeStore} capabilities={MERGE_CAPS} />
         </div>
       ))}
     </section>
