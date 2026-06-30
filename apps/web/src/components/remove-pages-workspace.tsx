@@ -1,6 +1,5 @@
 "use client";
 
-import { useDocumentStore } from "@/stores/document-store";
 import { useSelectionStore } from "@/stores/selection-store";
 import { REMOVE_CAPS, useRemovePagesStore } from "@/stores/remove-pages-store";
 
@@ -37,7 +36,7 @@ function RemoveControls() {
 }
 
 export function RemovePagesWorkspace() {
-  const hasDoc = useDocumentStore((s) => s.documents.length > 0);
+  const hasDoc = useRemovePagesStore((s) => s.pageEntries.length > 0);
   return (
     <SingleDocGridWorkspace
       store={useRemovePagesStore}

@@ -79,6 +79,10 @@ apps/
 │   │   ├── compress-workspace.tsx    # shell del tool compress
 │   │   ├── office-workspace.tsx       # shell del tool Office→PDF (server-side opt-in)
 │   │   ├── media-workspace.tsx        # shell del tool audio/video (client-side, ffmpeg.wasm)
+│   │   ├── rotate-workspace.tsx       # shell del tool rotate (client-side, page-grid)
+│   │   ├── organize-workspace.tsx     # shell del tool organize (client-side, page-grid)
+│   │   ├── remove-pages-workspace.tsx # shell del tool remove-pages (client-side, page-grid)
+│   │   ├── extract-pages-workspace.tsx# shell del tool extract-pages (client-side, page-grid)
 │   │   ├── server-consent-banner.tsx # opt-in para herramientas server-side
 │   │   ├── analytics.tsx             # tracker privacy-first (env-driven)
 │   │   ├── canvas-*                  # UI del estado canvas del merge tool
@@ -86,15 +90,17 @@ apps/
 │   │   ├── legal-page-shell.tsx      # shell para /privacy + /security
 │   │   ├── error-banner.tsx
 │   │   ├── export-flow-modal.tsx
-│   │   ├── page-thumbnails-panel.tsx
+│   │   ├── page-grid/                # <PageGrid>, tile, SingleDocGridWorkspace, PageRangeControl (motor de grilla)
 │   │   ├── status-strip.tsx
 │   │   └── workspace-dropzone.tsx
 │   ├── stores/
 │   │   ├── document-store.ts   # documents + uiPhase + lastError (compartido)
 │   │   ├── selection-store.ts  # selección de ids (tool-agnostic)
-│   │   └── merge-store.ts      # estado del tool merge (compone los anteriores)
+│   │   ├── merge-store.ts      # estado del tool merge (compone los anteriores)
+│   │   └── rotate/organize/remove-pages/extract-pages-store.ts  # instancias de createPageGridStore
 │   ├── types/workspace.ts      # WorkspaceDocument, PageEntry
 │   ├── lib/                    # format-bytes, project-display-name
+│   │   ├── page-grid/          # createPageGridStore (use-page-grid), build-export
 │   │   └── ffmpeg/             # load-ffmpeg (singleton lazy), formats, convert (ffmpeg.wasm)
 │   └── scripts/
 │       ├── copy-pdf-worker.cjs    # postinstall: pdf.js worker → public/

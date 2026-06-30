@@ -1,6 +1,5 @@
 "use client";
 
-import { useDocumentStore } from "@/stores/document-store";
 import { useSelectionStore } from "@/stores/selection-store";
 import { EXTRACT_CAPS, useExtractPagesStore } from "@/stores/extract-pages-store";
 
@@ -44,7 +43,7 @@ function ExtractControls() {
 }
 
 export function ExtractPagesWorkspace() {
-  const hasDoc = useDocumentStore((s) => s.documents.length > 0);
+  const hasDoc = useExtractPagesStore((s) => s.pageEntries.length > 0);
   return (
     <SingleDocGridWorkspace
       store={useExtractPagesStore}

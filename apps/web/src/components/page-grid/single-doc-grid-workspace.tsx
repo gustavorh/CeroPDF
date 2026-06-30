@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 
 import { MAX_FILE_BYTES } from "@ceropdf/pdf-core";
 import { Dropzone } from "@ceropdf/ui";
 
 import { useDocumentStore } from "@/stores/document-store";
+import { useSelectionStore } from "@/stores/selection-store";
 import type { Capabilities, UsePageGridStore } from "@/lib/page-grid/use-page-grid";
 
 import { ErrorBanner } from "../error-banner";
@@ -36,7 +37,12 @@ export function SingleDocGridWorkspace({
   const resetWorkspace = useStore((s) => s.resetWorkspace);
   const exportPdf = useStore((s) => s.exportPdf);
 
-  const doc = documents[0];
+  const firstDocId = useStore((s) => s.pageEntries[0]?.documentId);
+  const doc = firstDocId ? documents.find((d) => d.id === firstDocId) : undefined;
+
+  useEffect(() => {
+    useSelectionStore.getState().clear();
+  }, []);
   const busy =
     uiPhase === "loading" || uiPhase === "parsing" || uiPhase === "processing";
   const maxMb = Math.round(MAX_FILE_BYTES / (1024 * 1024));

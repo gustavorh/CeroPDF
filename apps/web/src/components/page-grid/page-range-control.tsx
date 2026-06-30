@@ -23,6 +23,7 @@ export function PageRangeControl({ pageCount, onApply, applyLabel, placeholder }
         Array.from({ length: r.end - r.start + 1 }, (_, k) => r.start + k),
       );
       onApply(pages);
+      setValue("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Rango no válido.");
     }
@@ -35,6 +36,7 @@ export function PageRangeControl({ pageCount, onApply, applyLabel, placeholder }
           type="text"
           value={value}
           onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") void apply(); }}
           placeholder={placeholder ?? "1-3, 5, 7-10"}
           className="min-w-[12rem] flex-1 rounded-md border border-outline-variant/40 bg-surface-container-low/90 px-3 py-2 font-mono text-sm text-foreground placeholder:text-tertiary focus-visible:border-primary/45 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
           autoComplete="off"

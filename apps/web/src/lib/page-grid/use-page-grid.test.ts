@@ -99,6 +99,13 @@ describe("createPageGridStore — page ops", () => {
     expect(useStore.getState().pageEntries.map((e) => e.rotation)).toEqual([0, 90]);
   });
 
+  it("rotateAll(-90) rotates every page backward (mod 360)", () => {
+    const useStore = createPageGridStore(CONFIG);
+    useStore.setState({ pageEntries: [entry({ id: "p1", rotation: 0 }), entry({ id: "p2", rotation: 90 })] });
+    useStore.getState().rotateAll(-90);
+    expect(useStore.getState().pageEntries.map((e) => e.rotation)).toEqual([270, 0]);
+  });
+
   it("reorderDocuments reorders pages to follow the new document order", () => {
     const useStore = createPageGridStore(CONFIG);
     useDocumentStore.setState({

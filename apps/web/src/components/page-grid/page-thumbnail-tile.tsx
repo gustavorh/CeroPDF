@@ -215,15 +215,17 @@ export function PageThumbnailTile({
             }`}
             aria-hidden
           />
-          <button
-            type="button"
-            draggable={false}
-            aria-label={`Seleccionar página ${entry.sourcePageIndex + 1}`}
-            className="absolute inset-0 z-[1] bg-transparent focus-visible:z-[4] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
-            onClick={(e) => {
-              if (capabilities.canSelect) selectPageEntry(entry.id, { shiftKey: e.shiftKey });
-            }}
-          />
+          {capabilities.canSelect && (
+            <button
+              type="button"
+              draggable={false}
+              aria-label={`Seleccionar página ${entry.sourcePageIndex + 1}`}
+              className="absolute inset-0 z-[1] bg-transparent focus-visible:z-[4] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
+              onClick={(e) => {
+                selectPageEntry(entry.id, { shiftKey: e.shiftKey });
+              }}
+            />
+          )}
           {renderError ? (
             <span className="pointer-events-none absolute inset-0 z-[2] flex items-center justify-center px-2 text-center font-mono text-[10px] text-muted-foreground">
               {renderError}
