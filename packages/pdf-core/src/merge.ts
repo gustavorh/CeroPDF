@@ -80,12 +80,12 @@ export async function exportMergedPdf(
         page.setRotation(degrees(rot));
       }
       if (ref.crop) {
-        const { width, height } = page.getSize();
+        const mb = page.getMediaBox();
         page.setCropBox(
-          ref.crop.x * width,
-          ref.crop.y * height,
-          ref.crop.width * width,
-          ref.crop.height * height,
+          mb.x + ref.crop.x * mb.width,
+          mb.y + ref.crop.y * mb.height,
+          ref.crop.width * mb.width,
+          ref.crop.height * mb.height,
         );
       }
       out.addPage(page);

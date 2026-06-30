@@ -53,6 +53,27 @@ describe("exportMergedPdf — crop", () => {
     expect(Math.round(box.height)).toBe(200);
   });
 
+  it("applies the crop relative to a non-zero MediaBox origin", async () => {
+    const pdf = await PDFDocument.create();
+    const page = pdf.addPage([300, 400]);
+    page.setMediaBox(100, 50, 300, 400); // origin (100, 50)
+    const raw = await pdf.save();
+    const doc = new ArrayBuffer(raw.byteLength);
+    new Uint8Array(doc).set(raw);
+
+    const pages: ExportPageRef[] = [
+      { documentId: "a", sourcePageIndex: 0, rotation: 0, crop: { x: 0.25, y: 0.25, width: 0.5, height: 0.5 } },
+    ];
+    const merged = await exportMergedPdf(pages, () => doc, { optimizeSize: false });
+    const parsed = await PDFDocument.load(merged);
+    const box = parsed.getPage(0).getCropBox();
+    // origin + normalized*size: x = 100 + 0.25*300 = 175 ; y = 50 + 0.25*400 = 150
+    expect(Math.round(box.x)).toBe(175);
+    expect(Math.round(box.y)).toBe(150);
+    expect(Math.round(box.width)).toBe(150);
+    expect(Math.round(box.height)).toBe(200);
+  });
+
   it("composes resize then crop against the resized size", async () => {
     const doc = await makePdf(200, 400);
     const pages: ExportPageRef[] = [
