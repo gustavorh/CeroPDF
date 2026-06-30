@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-import { readDocumentBytes } from "@ceropdf/pdf-core";
+import { readDocumentBytes, type CropRect } from "@ceropdf/pdf-core";
 
 import { triggerDownload } from "@/lib/trigger-download";
 import {
@@ -18,6 +18,7 @@ export type Capabilities = {
   canHide?: boolean;
   canRemove?: boolean;
   canSelect?: boolean;
+  canCrop?: boolean;
 };
 
 export type PageGridConfig = {
@@ -49,6 +50,8 @@ type PageGridState = {
   rotatePageClockwise: (entryId: string) => void;
   rotatePageCounterClockwise: (entryId: string) => void;
   rotateAll: (delta: 90 | -90) => void;
+  setCropAll: (rect: CropRect | null) => void;
+  setPageCrop: (entryId: string, rect: CropRect | null) => void;
   selectPageEntry: (entryId: string, options: { shiftKey: boolean }) => void;
   setProjectName: (name: string) => void;
   setOptimizeSize: (value: boolean) => void;
@@ -162,6 +165,18 @@ export function createPageGridStore(config: PageGridConfig) {
           ...e,
           rotation: ((((e.rotation ?? 0) + delta) % 360) + 360) % 360,
         })),
+      })),
+
+    setCropAll: (rect) =>
+      set((s) => ({
+        pageEntries: s.pageEntries.map((e) => ({ ...e, crop: rect ?? undefined })),
+      })),
+
+    setPageCrop: (entryId, rect) =>
+      set((s) => ({
+        pageEntries: s.pageEntries.map((e) =>
+          e.id === entryId ? { ...e, crop: rect ?? undefined } : e,
+        ),
       })),
 
     selectPageEntry: (entryId, { shiftKey }) => {

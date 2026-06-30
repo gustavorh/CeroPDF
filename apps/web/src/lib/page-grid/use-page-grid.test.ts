@@ -118,6 +118,26 @@ describe("createPageGridStore — page ops", () => {
     useStore.getState().reorderDocuments(0, 1);
     expect(useStore.getState().pageEntries.map((e) => e.id)).toEqual(["b0", "a0"]);
   });
+
+  it("setCropAll applies the same crop to every entry; null clears it", () => {
+    const useStore = createPageGridStore(CONFIG);
+    useStore.setState({ pageEntries: [entry({ id: "p1" }), entry({ id: "p2", sourcePageIndex: 1 })] });
+    const rect = { x: 0.1, y: 0.1, width: 0.8, height: 0.8 };
+    useStore.getState().setCropAll(rect);
+    expect(useStore.getState().pageEntries.map((e) => e.crop)).toEqual([rect, rect]);
+    useStore.getState().setCropAll(null);
+    expect(useStore.getState().pageEntries.map((e) => e.crop)).toEqual([undefined, undefined]);
+  });
+
+  it("setPageCrop sets/clears only the target entry", () => {
+    const useStore = createPageGridStore(CONFIG);
+    useStore.setState({ pageEntries: [entry({ id: "p1" }), entry({ id: "p2", sourcePageIndex: 1 })] });
+    const rect = { x: 0, y: 0, width: 0.5, height: 0.5 };
+    useStore.getState().setPageCrop("p2", rect);
+    expect(useStore.getState().pageEntries.map((e) => e.crop)).toEqual([undefined, rect]);
+    useStore.getState().setPageCrop("p2", null);
+    expect(useStore.getState().pageEntries.map((e) => e.crop)).toEqual([undefined, undefined]);
+  });
 });
 
 describe("createPageGridStore — exportPdf semantics", () => {
