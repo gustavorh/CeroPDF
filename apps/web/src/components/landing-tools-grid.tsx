@@ -7,6 +7,7 @@ type ToolKey =
   | "split"
   | "edit"
   | "rotate"
+  | "organize"
   | "extract"
   | "compress"
   | "officeToPdf"
@@ -188,11 +189,23 @@ function GlyphRotate() {
   );
 }
 
+function GlyphOrganize() {
+  return (
+    <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="4" y="5" width="8" height="18" rx="1.5" />
+      <rect x="16" y="5" width="8" height="18" rx="1.5" />
+      <path d="M14 11v6" />
+      <path d="M11.5 13.5 14 11l2.5 2.5" />
+    </svg>
+  );
+}
+
 const TOOLS: ToolEntry[] = [
   { key: "merge", slug: "merge", status: "available", glyph: <GlyphMerge /> },
   { key: "split", slug: "split", status: "available", glyph: <GlyphSplit /> },
   { key: "edit", slug: "edit", status: "available", glyph: <GlyphEdit /> },
   { key: "rotate", slug: "rotate", status: "available", glyph: <GlyphRotate /> },
+  { key: "organize", slug: "organize", status: "available", glyph: <GlyphOrganize /> },
   {
     key: "compress",
     slug: "compress",

@@ -64,6 +64,10 @@
       "name": "Rotar PDF",
       "description": "Gira páginas individuales o todo el documento y descarga el PDF rotado."
     },
+    "organize": {
+      "name": "Organizar PDF",
+      "description": "Reordena, rota y elimina páginas, y exporta el PDF reorganizado."
+    },
     "secure": {
       "name": "Proteger PDF",
       "description": "Añade contraseña o marca de agua, o quita la protección de un PDF que ya tienes."

@@ -11,6 +11,7 @@ const TOOL_PATHS = [
   "/split",
   "/edit",
   "/rotate",
+  "/organize",
   "/compress",
   "/office-to-pdf",
   "/media",

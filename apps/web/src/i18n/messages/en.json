@@ -64,6 +64,10 @@
       "name": "Rotate PDF",
       "description": "Turn individual pages or the whole document and download the rotated PDF."
     },
+    "organize": {
+      "name": "Organize PDF",
+      "description": "Reorder, rotate, and delete pages, then export the reorganized PDF."
+    },
     "secure": {
       "name": "Protect PDF",
       "description": "Add a password or watermark, or strip protection from a PDF you already have."
