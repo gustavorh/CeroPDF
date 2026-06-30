@@ -63,6 +63,10 @@ apps/
 │   │   │   ├── compress/page.tsx # tool: comprimir con Ghostscript (server-side opt-in)
 │   │   │   ├── office-to-pdf/page.tsx # tool: Office→PDF con LibreOffice (server-side opt-in)
 │   │   │   ├── media/page.tsx    # tool: convertir audio/video con ffmpeg.wasm (client-side)
+│   │   │   ├── rotate/page.tsx       # tool: rotar páginas (client-side, page-grid)
+│   │   │   ├── organize/page.tsx     # tool: reordenar/rotar/quitar (client-side, page-grid)
+│   │   │   ├── remove-pages/page.tsx # tool: quitar páginas (client-side, page-grid)
+│   │   │   ├── extract-pages/page.tsx# tool: extraer páginas (client-side, page-grid)
 │   │   │   ├── privacy/page.tsx  # contrato de privacidad
 │   │   │   └── security/page.tsx # contrato de seguridad
 │   │   ├── api/heavy/*       # proxies internos al sidecar (sin locale)
@@ -118,13 +122,17 @@ packages/
 - **Copy UI**: español. **Código y comentarios**: inglés.
 - **Comentarios**: solo cuando el "por qué" no es obvio. Nada de explicar "qué" hace el código.
 
-## Patrón para añadir una herramienta PDF nueva
+## Patrón para añadir una herramienta PDF nueva (single-doc, tipo grilla)
 
-1. **Tipos** en `apps/web/src/types/workspace.ts` si necesitas shape nuevo.
-2. **Lógica pura** en `apps/web/src/lib/pdf/<tool-name>.ts`. Async, yields cada ~10 páginas con `await new Promise(r => setTimeout(r, 0))` para no bloquear el main thread (template: `export-workspace-pdf.ts:52-54`).
-3. **Acción en store** `apps/web/src/stores/workspace-store.ts`. Usar `setUiPhase` para feedback (`idle | loading | parsing | rendering | merging | export_success | error`).
-4. **UI** en un nuevo `canvas-<tool-name>.tsx` o extiende `canvas-bottom-pill.tsx`.
-5. **Validar límites** contra `MAX_FILE_BYTES` y `MAX_COMBINED_PAGES`.
+1. **Store**: `apps/web/src/stores/<tool>-store.ts` = `createPageGridStore(config)` con
+   `multiDoc: false`, `capabilities` (qué controles muestra `<PageGrid>`),
+   `exportUsesSelection`, `exportPhase: "processing"`, `buildFilename`. Exporta también `<TOOL>_CAPS`.
+2. **Workspace**: `apps/web/src/components/<tool>-workspace.tsx` que renderiza
+   `<SingleDocGridWorkspace store={useXStore} capabilities={X_CAPS} title description exportLabel controls? />`.
+   Los controles propios del tool (rangos, etc.) van en `controls`.
+3. **Ruta**: `apps/web/src/app/[locale]/<slug>/page.tsx` con metadata SEO.
+4. **Registro**: `tools.<key>` en `messages/{es,en}.json`, slug en `app/sitemap.ts`, y entrada en `landing-tools-grid.tsx`.
+5. **Lógica pura** sólo si hace falta export nuevo: en `packages/pdf-core` (no en componentes).
 6. **Invocar `/check-design` y `/check-architecture`** antes de commit.
 
 ## Design system
