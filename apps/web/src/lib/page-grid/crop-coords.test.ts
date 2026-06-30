@@ -22,4 +22,13 @@ describe("crop-coords", () => {
     expect(c.width).toBe(0.02);
     expect(c.height).toBe(0.02);
   });
+
+  it("clamps x/y so the box stays within bounds", () => {
+    expect(displayToCrop({ x: 0.95, y: 0.95, w: 0.5, h: 0.5 })).toEqual({
+      x: 0.5,
+      y: 0,
+      width: 0.5,
+      height: 0.5,
+    });
+  });
 });

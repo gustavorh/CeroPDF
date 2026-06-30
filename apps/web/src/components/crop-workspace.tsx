@@ -127,7 +127,7 @@ export function CropWorkspace() {
               className={btn}
               onClick={() => (scope === "all" ? setCropAll(null) : entry && setPageCrop(entry.id, null))}
             >
-              Quitar recorte
+              {`Quitar recorte ${scope === "all" ? "(todas)" : "(esta página)"}`}
             </button>
           </div>
 
