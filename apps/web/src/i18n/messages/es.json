@@ -44,6 +44,10 @@
       "name": "Extraer páginas",
       "description": "Selecciona páginas concretas y genera un PDF nuevo solo con esas."
     },
+    "removePages": {
+      "name": "Quitar páginas",
+      "description": "Elimina páginas por rango o selección y descarga el resto del PDF."
+    },
     "compress": {
       "name": "Comprimir PDF",
       "description": "Reduce el tamaño manteniendo legible texto e imágenes. Ideal para enviar por correo. Requiere servidor opcional."

@@ -44,6 +44,10 @@
       "name": "Extract pages",
       "description": "Pick specific pages and produce a brand-new PDF containing only those."
     },
+    "removePages": {
+      "name": "Remove pages",
+      "description": "Delete pages by range or selection and download the rest of the PDF."
+    },
     "compress": {
       "name": "Compress PDF",
       "description": "Shrink file size while keeping text and images readable. Great for email. Optional server-side."

@@ -15,6 +15,8 @@ const TOOL_PATHS = [
   "/compress",
   "/office-to-pdf",
   "/media",
+  "/remove-pages",
+  "/extract-pages",
 ] as const;
 const STATIC_PATHS = ["/privacy", "/security"] as const;
 
