@@ -15,6 +15,8 @@ type SelectionState = {
     options: { shiftKey: boolean },
   ) => void;
   clear: () => void;
+  /** Replaces the whole selection (e.g. from a range expression). Anchors on the last id. */
+  setSelection: (ids: string[]) => void;
   /** Drop ids that no longer exist (after entry deletion). */
   pruneTo: (validIds: ReadonlySet<string>) => void;
 };
@@ -37,6 +39,9 @@ export const useSelectionStore = create<SelectionState>()((set, get) => ({
   },
 
   clear: () => set({ selectedIds: [], anchorId: null }),
+
+  setSelection: (ids) =>
+    set({ selectedIds: [...ids], anchorId: ids[ids.length - 1] ?? null }),
 
   pruneTo: (validIds) =>
     set((s) => ({

@@ -25,6 +25,8 @@ export type PageGridConfig = {
   capabilities: Capabilities;
   features?: { projectName?: boolean; optimizeSize?: boolean };
   exportPhase: UiPhase;
+  /** When true, a non-empty selection narrows the export to selected pages (Extract, merge). */
+  exportUsesSelection: boolean;
   buildFilename: (projectName: string | null, docs: WorkspaceDocument[]) => string;
   defaultProjectName?: (docs: WorkspaceDocument[]) => string;
 };
@@ -46,6 +48,7 @@ type PageGridState = {
   removePageEntry: (entryId: string) => void;
   rotatePageClockwise: (entryId: string) => void;
   rotatePageCounterClockwise: (entryId: string) => void;
+  rotateAll: (delta: 90 | -90) => void;
   selectPageEntry: (entryId: string, options: { shiftKey: boolean }) => void;
   setProjectName: (name: string) => void;
   setOptimizeSize: (value: boolean) => void;
@@ -79,6 +82,11 @@ export function createPageGridStore(config: PageGridConfig) {
     optimizeSize: false,
 
     addDocumentsFromFiles: async (files) => {
+      if (!config.multiDoc && useDocumentStore.getState().documents.length > 0) {
+        useDocumentStore.getState().clearAll();
+        useSelectionStore.getState().clear();
+        set({ pageEntries: [] });
+      }
       const newDocs = await useDocumentStore.getState().addDocumentsFromFiles(files);
       if (newDocs.length === 0) return;
       const newEntries = newDocs.flatMap((d) => buildPageEntries(d.id, d.pageCount));
@@ -148,6 +156,14 @@ export function createPageGridStore(config: PageGridConfig) {
         ),
       })),
 
+    rotateAll: (delta) =>
+      set((s) => ({
+        pageEntries: s.pageEntries.map((e) => ({
+          ...e,
+          rotation: ((((e.rotation ?? 0) + delta) % 360) + 360) % 360,
+        })),
+      })),
+
     selectPageEntry: (entryId, { shiftKey }) => {
       const orderedIds = get().pageEntries.map((e) => e.id);
       useSelectionStore.getState().select(entryId, orderedIds, { shiftKey });
@@ -165,7 +181,9 @@ export function createPageGridStore(config: PageGridConfig) {
     exportPdf: async () => {
       const { pageEntries, optimizeSize, projectName } = get();
       const { documents, setUiPhase, setError } = useDocumentStore.getState();
-      const { selectedIds } = useSelectionStore.getState();
+      const selectedIds = config.exportUsesSelection
+        ? useSelectionStore.getState().selectedIds
+        : [];
 
       const refs = buildExportRefs(pageEntries, { selectedIds: new Set(selectedIds) });
       if (refs.length === 0) {

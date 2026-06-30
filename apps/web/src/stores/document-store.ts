@@ -24,6 +24,7 @@ export type UiPhase =
   | "parsing"
   | "rendering"
   | "merging"
+  | "processing"
   | "export_success"
   | "error";
 

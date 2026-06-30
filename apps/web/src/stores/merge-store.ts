@@ -17,6 +17,7 @@ export const useMergeStore = createPageGridStore({
   capabilities: MERGE_CAPS,
   features: { projectName: true, optimizeSize: true },
   exportPhase: "merging",
+  exportUsesSelection: true,
   buildFilename: buildExportDownloadFilename,
   defaultProjectName: defaultProjectDisplayName,
 });

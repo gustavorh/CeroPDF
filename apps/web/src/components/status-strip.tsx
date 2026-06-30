@@ -9,6 +9,7 @@ const PHASE_LABEL: Record<UiPhase, string> = {
   parsing: "Leyendo tu PDF…",
   rendering: "Renderizando miniaturas…",
   merging: "Uniendo documentos…",
+  processing: "Procesando…",
   export_success: "Exportación lista",
   error: "Revisa el mensaje de arriba",
 };

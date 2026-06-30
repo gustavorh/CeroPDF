@@ -24,6 +24,7 @@ const CONFIG: PageGridConfig = {
   capabilities: { canReorder: true, canRotate: true, canHide: true, canRemove: true, canSelect: true },
   features: { projectName: true, optimizeSize: true },
   exportPhase: "merging",
+  exportUsesSelection: true,
   buildFilename: () => "out.pdf",
 };
 
@@ -91,6 +92,13 @@ describe("createPageGridStore — page ops", () => {
     expect(useSelectionStore.getState().selectedIds).toEqual(["b0"]);
   });
 
+  it("rotateAll rotates every page by the delta (mod 360)", () => {
+    const useStore = createPageGridStore(CONFIG);
+    useStore.setState({ pageEntries: [entry({ id: "p1", rotation: 270 }), entry({ id: "p2", rotation: 0 })] });
+    useStore.getState().rotateAll(90);
+    expect(useStore.getState().pageEntries.map((e) => e.rotation)).toEqual([0, 90]);
+  });
+
   it("reorderDocuments reorders pages to follow the new document order", () => {
     const useStore = createPageGridStore(CONFIG);
     useDocumentStore.setState({
@@ -145,6 +153,21 @@ describe("createPageGridStore — exportPdf semantics", () => {
       unknown,
     ];
     expect(call[0].map((r) => r.sourcePageIndex)).toEqual([0, 2]);
+  });
+
+  it("exportUsesSelection=false exports all visible entries, ignoring the selection", async () => {
+    const useStore = createPageGridStore({ ...CONFIG, exportUsesSelection: false });
+    useStore.setState({
+      pageEntries: [entry({ id: "p1", sourcePageIndex: 0 }), entry({ id: "p2", sourcePageIndex: 1 })],
+    });
+    useSelectionStore.setState({ selectedIds: ["p1"], anchorId: "p1" });
+    await useStore.getState().exportPdf();
+    const call = exportMergedPdfMock.mock.calls[0] as unknown as [
+      Array<{ sourcePageIndex: number }>,
+      unknown,
+      unknown,
+    ];
+    expect(call[0].map((r) => r.sourcePageIndex)).toEqual([0, 1]);
   });
 
   it("blocks export and sets an error when nothing is visible", async () => {
