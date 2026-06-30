@@ -10,6 +10,7 @@ const TOOL_PATHS = [
   "/merge",
   "/split",
   "/edit",
+  "/rotate",
   "/compress",
   "/office-to-pdf",
   "/media",

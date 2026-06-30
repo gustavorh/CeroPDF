@@ -6,12 +6,12 @@ type ToolKey =
   | "merge"
   | "split"
   | "edit"
+  | "rotate"
   | "extract"
   | "compress"
   | "officeToPdf"
   | "mediaConvert"
-  | "imageConvert"
-  | "secure";
+  | "imageConvert";
 
 type ToolEntry = {
   /** i18n message key under `tools.<key>`. */
@@ -178,21 +178,12 @@ function GlyphEdit() {
   );
 }
 
-function GlyphLock() {
+function GlyphRotate() {
   return (
-    <svg
-      viewBox="0 0 28 28"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <rect x="6" y="12" width="16" height="13" rx="2" />
-      <path d="M10 12V8a4 4 0 1 1 8 0v4" />
-      <circle cx="14" cy="18" r="1" />
-      <path d="M14 19v2.5" />
+    <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M23 14a9 9 0 1 1-2.64-6.36" />
+      <path d="M23 4v5h-5" />
+      <rect x="9" y="9" width="10" height="10" rx="1.5" />
     </svg>
   );
 }
@@ -201,6 +192,7 @@ const TOOLS: ToolEntry[] = [
   { key: "merge", slug: "merge", status: "available", glyph: <GlyphMerge /> },
   { key: "split", slug: "split", status: "available", glyph: <GlyphSplit /> },
   { key: "edit", slug: "edit", status: "available", glyph: <GlyphEdit /> },
+  { key: "rotate", slug: "rotate", status: "available", glyph: <GlyphRotate /> },
   {
     key: "compress",
     slug: "compress",
@@ -221,7 +213,6 @@ const TOOLS: ToolEntry[] = [
   },
   { key: "extract", status: "coming_soon", glyph: <GlyphExtract /> },
   { key: "imageConvert", status: "coming_soon", glyph: <GlyphImage /> },
-  { key: "secure", status: "coming_soon", glyph: <GlyphLock /> },
 ];
 
 export async function LandingToolsGrid() {

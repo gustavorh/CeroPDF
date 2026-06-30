@@ -55,10 +55,16 @@ function ThumbnailGridItem({
         e.dataTransfer.setData("text/plain", String(localIndex));
       }}
       onDragEnd={() => setDragging(false)}
-      className={`flex flex-col ${dragging ? "cursor-grabbing opacity-[0.85]" : "cursor-grab"}`}
-      onDragEnter={allowDrop}
-      onDragOver={allowDrop}
-      onDrop={(e) => onDropAtLocalIndex(e, localIndex)}
+      className={`flex flex-col ${
+        capabilities.canReorder
+          ? dragging
+            ? "cursor-grabbing opacity-[0.85]"
+            : "cursor-grab"
+          : "cursor-default"
+      }`}
+      onDragEnter={capabilities.canReorder ? allowDrop : undefined}
+      onDragOver={capabilities.canReorder ? allowDrop : undefined}
+      onDrop={capabilities.canReorder ? (e) => onDropAtLocalIndex(e, localIndex) : undefined}
     >
       <PageThumbnailTile
         documentId={documentId}

@@ -60,6 +60,10 @@
       "name": "PDF ↔ Images",
       "description": "Export each page as JPG/PNG or turn a set of images into a PDF."
     },
+    "rotate": {
+      "name": "Rotate PDF",
+      "description": "Turn individual pages or the whole document and download the rotated PDF."
+    },
     "secure": {
       "name": "Protect PDF",
       "description": "Add a password or watermark, or strip protection from a PDF you already have."
