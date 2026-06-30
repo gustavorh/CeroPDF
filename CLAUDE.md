@@ -67,6 +67,7 @@ apps/
 │   │   │   ├── organize/page.tsx     # tool: reordenar/rotar/quitar (client-side, page-grid)
 │   │   │   ├── remove-pages/page.tsx # tool: quitar páginas (client-side, page-grid)
 │   │   │   ├── extract-pages/page.tsx# tool: extraer páginas (client-side, page-grid)
+│   │   │   ├── crop/page.tsx        # tool: recortar páginas (client-side, canvas propio)
 │   │   │   ├── privacy/page.tsx  # contrato de privacidad
 │   │   │   └── security/page.tsx # contrato de seguridad
 │   │   ├── api/heavy/*       # proxies internos al sidecar (sin locale)

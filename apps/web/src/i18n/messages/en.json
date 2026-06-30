@@ -48,6 +48,10 @@
       "name": "Remove pages",
       "description": "Delete pages by range or selection and download the rest of the PDF."
     },
+    "crop": {
+      "name": "Crop PDF",
+      "description": "Draw a crop area and apply it to every page or to specific pages."
+    },
     "compress": {
       "name": "Compress PDF",
       "description": "Shrink file size while keeping text and images readable. Great for email. Optional server-side."

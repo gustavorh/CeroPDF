@@ -48,6 +48,10 @@
       "name": "Quitar páginas",
       "description": "Elimina páginas por rango o selección y descarga el resto del PDF."
     },
+    "crop": {
+      "name": "Recortar PDF",
+      "description": "Dibuja un área de recorte y aplícala a todas las páginas o a páginas concretas."
+    },
     "compress": {
       "name": "Comprimir PDF",
       "description": "Reduce el tamaño manteniendo legible texto e imágenes. Ideal para enviar por correo. Requiere servidor opcional."
