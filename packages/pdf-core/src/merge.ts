@@ -93,6 +93,8 @@ export async function exportMergedPdf(
             ref.resize.width,
             ref.resize.height,
           );
+          // Centering assumes MediaBox origin (0,0); content of pages with a
+          // non-zero origin may be off-center (page size is still exact).
           page.scaleContent(scale, scale);
           page.translateContent(dx, dy);
           page.setSize(ref.resize.width, ref.resize.height);

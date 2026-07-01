@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { RESIZE_CAPS, useResizeStore } from "@/stores/resize-store";
 
@@ -22,6 +22,10 @@ function ResizeControls() {
   const resize = useResizeStore((s) => s.resize);
   const setResize = useResizeStore((s) => s.setResize);
   const [pct, setPct] = useState("100");
+
+  useEffect(() => {
+    setPct(resize?.kind === "scale" ? String(Math.round(resize.factor * 100)) : "100");
+  }, [resize]);
 
   const applyScale = () => {
     const n = Number.parseInt(pct, 10);
