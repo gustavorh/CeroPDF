@@ -13,8 +13,7 @@ push a main ─► job ci (GitHub cloud): lint · typecheck · test · build
                docker compose up -d --build  →  docker image prune -f
 ```
 
-El job `deploy` está gateado a `push` + `main`, así que los PRs (incluidos los de
-forks del repo público) **nunca** despliegan.
+El job `deploy` está gateado a `push` + `main`, así que **ese job** nunca corre en PRs. **Ojo:** eso NO basta para blindar el runner en un repo público — ver "Seguridad del runner" abajo.
 
 ## Setup del runner (una vez, en prod-host)
 
@@ -39,6 +38,22 @@ sudo ./svc.sh start
 
 El workflow selecciona este runner con `runs-on: [self-hosted, prod-host]`.
 
+## Seguridad del runner (repo público)
+
+CeroPDF es un repo **público** + self-hosted runner = superficie sensible: en un
+evento `pull_request`, GitHub ejecuta el workflow **desde el head del PR**, así que
+un PR de un fork podría añadir un job con `runs-on: [self-hosted, prod-host]` y
+ejecutar código en prod-host (RCE en la VM interna). El gate `if: push && main` del
+job `deploy` NO cierra esto por sí solo. Mitigaciones (hazlas ANTES de registrar el
+runner):
+
+1. **GitHub → Settings → Actions → General → "Fork pull request workflows from
+   outside collaborators" → "Require approval for all outside collaborators"** (la
+   opción más estricta). Así ningún workflow de un fork corre sin tu aprobación.
+2. Trata al host del runner como potencial blast radius: idealmente un runner
+   dedicado/efímero, o una VM que no comparta secretos ni otros servicios críticos.
+3. No pongas secrets en el workflow (este deploy no usa ninguno — mantenerlo así).
+
 ## Red / WAF
 
 - DNS interna: registrar `pdf.home.gustavorh.com` → `10.0.30.254` (prod-host).
@@ -61,7 +76,7 @@ curl -f http://127.0.0.1:3002/          # responde 200
 
 ## Rollback
 
-En prod-host, en el checkout del runner (`~/actions-runner/_work/CeroPDF/CeroPDF`):
+En prod-host, en el checkout del runner (`~/actions-runner/_work/CeroPDF/CeroPDF`) (ajusta `CeroPDF` al nombre real del repo en GitHub):
 
 ```bash
 git checkout <commit-anterior>
