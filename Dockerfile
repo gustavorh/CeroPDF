@@ -18,6 +18,10 @@ RUN npm ci
 # Copiar todo el código fuente
 COPY . .
 
+# Bake the public site URL at build time (Next inlines NEXT_PUBLIC_* into the bundle).
+ARG NEXT_PUBLIC_SITE_URL=https://pdf.home.gustavorh.com
+ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
+
 # Build de la aplicación Next.js
 RUN npm run build
 
