@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-import { readDocumentBytes, type CropRect } from "@ceropdf/pdf-core";
+import { readDocumentBytes, type CropRect, type ResizeDirective } from "@ceropdf/pdf-core";
 
 import { triggerDownload } from "@/lib/trigger-download";
 import {
@@ -19,6 +19,7 @@ export type Capabilities = {
   canRemove?: boolean;
   canSelect?: boolean;
   canCrop?: boolean;
+  canResize?: boolean;
 };
 
 export type PageGridConfig = {
@@ -52,6 +53,8 @@ type PageGridState = {
   rotateAll: (delta: 90 | -90) => void;
   setCropAll: (rect: CropRect | null) => void;
   setPageCrop: (entryId: string, rect: CropRect | null) => void;
+  resize: ResizeDirective | null;
+  setResize: (directive: ResizeDirective | null) => void;
   selectPageEntry: (entryId: string, options: { shiftKey: boolean }) => void;
   setProjectName: (name: string) => void;
   setOptimizeSize: (value: boolean) => void;
@@ -83,6 +86,7 @@ export function createPageGridStore(config: PageGridConfig) {
     pageEntries: [],
     projectName: null,
     optimizeSize: false,
+    resize: null,
 
     addDocumentsFromFiles: async (files) => {
       if (!config.multiDoc && useDocumentStore.getState().documents.length > 0) {
@@ -179,6 +183,8 @@ export function createPageGridStore(config: PageGridConfig) {
         ),
       })),
 
+    setResize: (resize) => set({ resize }),
+
     selectPageEntry: (entryId, { shiftKey }) => {
       const orderedIds = get().pageEntries.map((e) => e.id);
       useSelectionStore.getState().select(entryId, orderedIds, { shiftKey });
@@ -190,7 +196,7 @@ export function createPageGridStore(config: PageGridConfig) {
     resetWorkspace: () => {
       useDocumentStore.getState().clearAll();
       useSelectionStore.getState().clear();
-      set({ pageEntries: [], projectName: null, optimizeSize: false });
+      set({ pageEntries: [], projectName: null, optimizeSize: false, resize: null });
     },
 
     exportPdf: async () => {
@@ -200,7 +206,10 @@ export function createPageGridStore(config: PageGridConfig) {
         ? useSelectionStore.getState().selectedIds
         : [];
 
-      const refs = buildExportRefs(pageEntries, { selectedIds: new Set(selectedIds) });
+      const refs = buildExportRefs(pageEntries, {
+        selectedIds: new Set(selectedIds),
+        resize: get().resize ?? undefined,
+      });
       if (refs.length === 0) {
         setError(
           "No hay páginas para exportar (todas excluidas o la selección no coincide).",
