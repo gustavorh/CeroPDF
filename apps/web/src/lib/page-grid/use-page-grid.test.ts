@@ -138,6 +138,14 @@ describe("createPageGridStore — page ops", () => {
     useStore.getState().setPageCrop("p2", null);
     expect(useStore.getState().pageEntries.map((e) => e.crop)).toEqual([undefined, undefined]);
   });
+
+  it("setResize sets and clears the resize directive", () => {
+    const useStore = createPageGridStore(CONFIG);
+    useStore.getState().setResize({ kind: "scale", factor: 0.5 });
+    expect(useStore.getState().resize).toEqual({ kind: "scale", factor: 0.5 });
+    useStore.getState().setResize(null);
+    expect(useStore.getState().resize).toBeNull();
+  });
 });
 
 describe("createPageGridStore — exportPdf semantics", () => {
@@ -203,5 +211,20 @@ describe("createPageGridStore — exportPdf semantics", () => {
     await useStore.getState().exportPdf();
     expect(exportMergedPdfMock).not.toHaveBeenCalled();
     expect(useDocumentStore.getState().lastError ?? "").toMatch(/No hay páginas/);
+  });
+
+  it("exportPdf applies the active resize to every ref", async () => {
+    const useStore = createPageGridStore(CONFIG);
+    useStore.setState({
+      pageEntries: [entry({ id: "p1", sourcePageIndex: 0 }), entry({ id: "p2", sourcePageIndex: 1 })],
+    });
+    useStore.getState().setResize({ kind: "size", width: 595, height: 842 });
+    await useStore.getState().exportPdf();
+    const call = exportMergedPdfMock.mock.calls[0] as unknown as [
+      Array<{ resize?: { kind: string } }>,
+      unknown,
+      unknown,
+    ];
+    expect(call[0].every((r) => r.resize?.kind === "size")).toBe(true);
   });
 });

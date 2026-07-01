@@ -11,6 +11,7 @@ type ToolKey =
   | "extract"
   | "removePages"
   | "crop"
+  | "resize"
   | "compress"
   | "officeToPdf"
   | "mediaConvert"
@@ -222,6 +223,16 @@ function GlyphCrop() {
   );
 }
 
+function GlyphResize() {
+  return (
+    <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="4" y="4" width="20" height="20" rx="2" />
+      <path d="M9 9h6v6" />
+      <path d="M15 9l-6 6" />
+    </svg>
+  );
+}
+
 const TOOLS: ToolEntry[] = [
   { key: "merge", slug: "merge", status: "available", glyph: <GlyphMerge /> },
   { key: "split", slug: "split", status: "available", glyph: <GlyphSplit /> },
@@ -249,6 +260,7 @@ const TOOLS: ToolEntry[] = [
   { key: "extract", slug: "extract-pages", status: "available", glyph: <GlyphExtract /> },
   { key: "removePages", slug: "remove-pages", status: "available", glyph: <GlyphRemovePages /> },
   { key: "crop", slug: "crop", status: "available", glyph: <GlyphCrop /> },
+  { key: "resize", slug: "resize", status: "available", glyph: <GlyphResize /> },
   { key: "imageConvert", status: "coming_soon", glyph: <GlyphImage /> },
 ];
 

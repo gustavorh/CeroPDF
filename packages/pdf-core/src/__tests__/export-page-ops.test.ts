@@ -1,7 +1,23 @@
 import { PDFDocument } from "pdf-lib";
 import { describe, expect, it } from "vitest";
 
-import { exportMergedPdf, type ExportPageRef } from "../merge";
+import { computeFitResize, exportMergedPdf, type ExportPageRef } from "../merge";
+
+describe("computeFitResize", () => {
+  it("scales by the smaller ratio and centers the overflow axis", () => {
+    const r = computeFitResize(200, 400, 595, 842);
+    expect(r.scale).toBeCloseTo(2.105, 2); // min(595/200=2.975, 842/400=2.105)
+    expect(Math.round(r.dx)).toBe(87); // (595 - 200*2.105)/2
+    expect(Math.round(r.dy)).toBe(0); // (842 - 400*2.105)/2
+  });
+
+  it("has no offset when the aspect ratios match", () => {
+    const r = computeFitResize(100, 200, 300, 600);
+    expect(r.scale).toBeCloseTo(3, 5);
+    expect(r.dx).toBeCloseTo(0, 5);
+    expect(r.dy).toBeCloseTo(0, 5);
+  });
+});
 
 async function makePdf(width: number, height: number): Promise<ArrayBuffer> {
   const pdf = await PDFDocument.create();

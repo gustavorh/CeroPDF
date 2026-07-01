@@ -18,6 +18,7 @@ const TOOL_PATHS = [
   "/remove-pages",
   "/extract-pages",
   "/crop",
+  "/resize",
 ] as const;
 const STATIC_PATHS = ["/privacy", "/security"] as const;
 

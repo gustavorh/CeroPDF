@@ -1,5 +1,5 @@
 export { MAX_FILE_BYTES, MAX_COMBINED_PAGES } from "./constants";
-export { exportMergedPdf } from "./merge";
+export { computeFitResize, exportMergedPdf } from "./merge";
 export type { BytesProvider, CropRect, ExportPageRef, ResizeDirective } from "./merge";
 export { parseRanges, splitPdfByPage, splitPdfByRanges } from "./split";
 export type { PageRange, SplitChunk } from "./split";

@@ -30,6 +30,21 @@ export type BytesProvider = (
   documentId: string,
 ) => Promise<ArrayBuffer | undefined> | ArrayBuffer | undefined;
 
+/** Uniform scale + centering offsets to fit a src box into a target box (aspect-preserving). */
+export function computeFitResize(
+  srcW: number,
+  srcH: number,
+  targetW: number,
+  targetH: number,
+): { scale: number; dx: number; dy: number } {
+  const scale = Math.min(targetW / srcW, targetH / srcH);
+  return {
+    scale,
+    dx: (targetW - srcW * scale) / 2,
+    dy: (targetH - srcH * scale) / 2,
+  };
+}
+
 function stripMergedDocumentMetadata(pdf: PDFDocument): void {
   pdf.setTitle("");
   pdf.setAuthor("");
@@ -71,8 +86,18 @@ export async function exportMergedPdf(
         if (ref.resize.kind === "scale") {
           page.scale(ref.resize.factor, ref.resize.factor);
         } else {
-          const { width, height } = page.getSize();
-          page.scale(ref.resize.width / width, ref.resize.height / height);
+          const { width: w, height: h } = page.getSize();
+          const { scale, dx, dy } = computeFitResize(
+            w,
+            h,
+            ref.resize.width,
+            ref.resize.height,
+          );
+          // Centering assumes MediaBox origin (0,0); content of pages with a
+          // non-zero origin may be off-center (page size is still exact).
+          page.scaleContent(scale, scale);
+          page.translateContent(dx, dy);
+          page.setSize(ref.resize.width, ref.resize.height);
         }
       }
       const rot = (((ref.rotation ?? 0) % 360) + 360) % 360;

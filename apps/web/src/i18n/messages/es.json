@@ -52,6 +52,10 @@
       "name": "Recortar PDF",
       "description": "Dibuja un área de recorte y aplícala a todas las páginas o a páginas concretas."
     },
+    "resize": {
+      "name": "Redimensionar PDF",
+      "description": "Cambia el tamaño de las páginas por porcentaje o a un tamaño de papel estándar."
+    },
     "compress": {
       "name": "Comprimir PDF",
       "description": "Reduce el tamaño manteniendo legible texto e imágenes. Ideal para enviar por correo. Requiere servidor opcional."
