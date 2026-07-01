@@ -52,6 +52,10 @@
       "name": "Crop PDF",
       "description": "Draw a crop area and apply it to every page or to specific pages."
     },
+    "resize": {
+      "name": "Resize PDF",
+      "description": "Change page size by percentage or to a standard paper size."
+    },
     "compress": {
       "name": "Compress PDF",
       "description": "Shrink file size while keeping text and images readable. Great for email. Optional server-side."
