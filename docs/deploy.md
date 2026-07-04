@@ -72,13 +72,13 @@ curl -fsSL -o r.tgz \
   https://github.com/actions/runner/releases/download/v$VER/actions-runner-linux-x64-$VER.tar.gz
 tar xzf r.tgz
 ./config.sh --url https://github.com/gustavorh/CeroPDF \
-  --token "$RUNNER_TOKEN" --name prod-host --labels prod-host \
+  --token "$RUNNER_TOKEN" --name prod-host-ceropdf --labels prod-host \
   --unattended --replace
 sudo ./svc.sh install "$USER" && sudo ./svc.sh start
 EOF
 ```
 
-Verifica: `systemctl status actions.runner.gustavorh-CeroPDF.prod-host` → `active`
+Verifica: `systemctl status actions.runner.gustavorh-CeroPDF.prod-host-ceropdf` → `active`
 y "Listening for Jobs". El workflow selecciona este runner con
 `runs-on: [self-hosted, prod-host]`.
 
@@ -176,7 +176,7 @@ el ingress, quita el router/service de `gateway.yml` (Traefik) y el bloque del
 
 | Síntoma | Causa probable | Fix |
 |---|---|---|
-| El job queda en cola, no corre | Runner caído o sin la label | `systemctl status actions.runner.gustavorh-CeroPDF.prod-host` → "Listening for Jobs" |
+| El job queda en cola, no corre | Runner caído o sin la label | `systemctl status actions.runner.gustavorh-CeroPDF.prod-host-ceropdf` → "Listening for Jobs" |
 | Caddy responde **502** | El web no está en `edge` o no arrancó | `docker compose ps`; revisa el health del servicio `web` |
 | Traefik responde **404** | Falta router/service o YAML inválido | Revisa `gateway.yml` y `docker logs traefik` |
 | Aviso de cert en el 1er acceso | Cert Cloudflare emitiéndose | Espera unos segundos y reintenta |
