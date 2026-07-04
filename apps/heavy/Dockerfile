@@ -48,8 +48,10 @@ USER appuser
 
 EXPOSE 3001
 
+# 127.0.0.1 (not localhost): Alpine resolves localhost to ::1 first; the server
+# listens on IPv4, so busybox wget to localhost gets "connection refused".
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-    CMD wget -qO- http://localhost:3001/health || exit 1
+    CMD wget -qO- http://127.0.0.1:3001/health || exit 1
 
 ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["node", "apps/heavy/dist/server.js"]

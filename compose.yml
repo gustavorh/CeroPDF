@@ -24,6 +24,10 @@ services:
     environment:
       - NODE_ENV=production
       - TZ=America/Santiago
+      # Next standalone se bindea a $HOSTNAME; Docker lo fija al container-id, así
+      # que sin esto escucha sólo en la IP del contenedor (Caddy daría 502 y el
+      # healthcheck en loopback fallaría). 0.0.0.0 = todas las interfaces.
+      - HOSTNAME=0.0.0.0
       # Apunta al sidecar via DNS interna de Docker.
       - HEAVY_API_URL=http://heavy:3001
     networks:
@@ -38,7 +42,9 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      # 127.0.0.1, no localhost: en Alpine localhost resuelve a ::1 (IPv6) y el
+      # server escucha IPv4, dando "connection refused".
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3000/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -72,7 +78,9 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3001/health"]
+      # 127.0.0.1, no localhost: en Alpine localhost resuelve a ::1 (IPv6) y busybox
+      # wget lo intenta primero; el server escucha IPv4 → "connection refused".
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3001/health"]
       interval: 30s
       timeout: 5s
       retries: 3

@@ -35,6 +35,9 @@ WORKDIR /app
 
 # Configurar entorno de producción
 ENV NODE_ENV=production
+# Next standalone se bindea a $HOSTNAME; Docker lo fija al container-id, lo que
+# lo dejaría escuchando sólo en la IP del contenedor. 0.0.0.0 = todas las interfaces.
+ENV HOSTNAME=0.0.0.0
 
 # Con standalone output, solo copiamos los archivos necesarios
 COPY --from=builder /app/apps/web/.next/standalone ./
@@ -51,9 +54,9 @@ USER appuser
 # Exponer puerto
 EXPOSE 3000
 
-# Health check
+# Health check (127.0.0.1: localhost puede resolver a ::1 en Alpine)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:3000/ || exit 1
+    CMD curl -f http://127.0.0.1:3000/api/health || exit 1
 
 # Iniciar servidor standalone
 CMD ["node", "apps/web/server.js"]
