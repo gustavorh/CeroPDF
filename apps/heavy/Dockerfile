@@ -36,8 +36,11 @@ ENV PORT=3001
 # soffice headless needs a writable HOME (appuser was created with -H / no home).
 ENV HOME=/tmp
 
+# npm workspaces hoist all deps to the root node_modules — heavy has no local
+# apps/heavy/node_modules, so its runtime deps resolve from /app/node_modules
+# (Node walks up from apps/heavy/dist/). Copying a per-workspace node_modules
+# here would fail: the path doesn't exist.
 COPY --from=builder --chown=appuser:nodejs /app/node_modules ./node_modules
-COPY --from=builder --chown=appuser:nodejs /app/apps/heavy/node_modules ./apps/heavy/node_modules
 COPY --from=builder --chown=appuser:nodejs /app/apps/heavy/dist ./apps/heavy/dist
 COPY --from=builder --chown=appuser:nodejs /app/apps/heavy/package.json ./apps/heavy/package.json
 
