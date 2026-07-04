@@ -2,7 +2,8 @@
 # CeroPDF — Herramienta web de manipulación de PDFs
 # =============================================================================
 # - `web`   → Next.js standalone, 100 % client-side por defecto.
-#             Expuesta vía SafeLine WAF (proxy reverso) en localhost.
+#             Expuesta vía Traefik (hermes) → Caddy (prod-host) en la red `edge`.
+#             Alias `ceropdf-web:3000` es el upstream del reverse_proxy de Caddy.
 # - `heavy` → Sidecar opcional con Ghostscript + qpdf para operaciones
 #             que no funcionan en navegador (compresión real, desbloqueo).
 #             Sólo accesible desde la red interna; nunca expuesta al público.
@@ -18,17 +19,18 @@ services:
         NEXT_PUBLIC_SITE_URL: "${NEXT_PUBLIC_SITE_URL:-https://pdf.home.gustavorh.com}"
     container_name: ceropdf-web
     restart: unless-stopped
-    # Exposed only on localhost for Safeline WAF
-    ports:
-      - "127.0.0.1:3002:3000"
+    # No ports publicados: Caddy alcanza el contenedor por el alias `ceropdf-web`
+    # en la red externa `edge`. Nada escucha en localhost del host.
     environment:
       - NODE_ENV=production
       - TZ=America/Santiago
       # Apunta al sidecar via DNS interna de Docker.
       - HEAVY_API_URL=http://heavy:3001
     networks:
-      - safeline-ce
-      - ceropdf-internal
+      edge:
+        aliases:
+          - ceropdf-web
+      ceropdf-internal: {}
     depends_on:
       heavy:
         condition: service_healthy
@@ -36,7 +38,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -44,8 +46,6 @@ services:
     labels:
       - "com.ceropdf.description=CeroPDF - PDF Tool"
       - "com.ceropdf.version=1.1.0"
-      - "com.safeline.service=true"
-      - "com.safeline.hostname=pdf.home.gustavorh.com"
 
   heavy:
     build:
@@ -85,9 +85,10 @@ services:
 # Networks
 # =============================================================================
 networks:
-  safeline-ce:
+  # Red externa compartida del gateway (Traefik → Caddy). La crea/gestiona la
+  # infra del homelab; sólo el servicio `web` la usa.
+  edge:
     external: true
-    name: safeline-ce
   ceropdf-internal:
     driver: bridge
     internal: false

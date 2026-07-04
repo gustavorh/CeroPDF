@@ -34,10 +34,11 @@ npm run typecheck    # tsc --noEmit sobre todos los workspaces
 npm test             # vitest run sobre packages que tengan test script
 
 # Deploy (homelab / prod-host): automático en cada push a `main` vía un
-# self-hosted GitHub Actions runner que corre `docker compose up -d --build`.
-# `web` queda en 127.0.0.1:3002 detrás de SafeLine WAF (pdf.home.gustavorh.com).
+# self-hosted GitHub Actions runner que corre `docker compose up -d --build --wait`.
+# Ingress: Traefik (hermes) → Caddy (prod-host) → `web` en la red `edge`
+# (alias `ceropdf-web:3000`), host `pdf.home.gustavorh.com`.
 # `heavy` queda interno; no se expone fuera de Docker.
-# Runbook completo (setup del runner, DNS/WAF, rollback): docs/deploy.md
+# Runbook completo (setup del runner, DNS, Traefik/Caddy, rollback): docs/deploy.md
 ```
 
 El `postinstall` de `apps/web/package.json` copia `pdf.worker.min.mjs` a `public/` vía `apps/web/scripts/copy-pdf-worker.cjs` y los cores de ffmpeg.wasm a `public/ffmpeg/` vía `apps/web/scripts/copy-ffmpeg-core.cjs`. **NO eliminar**. Al bumpear `pdfjs-dist` o `@ffmpeg/*` hay que re-correr `npm install` para que los assets se actualicen.
