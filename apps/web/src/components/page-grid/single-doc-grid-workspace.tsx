@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect } from "react";
 
-import { MAX_FILE_BYTES } from "@ceropdf/pdf-core";
+import { MAX_FILE_BYTES } from "@ceropdf/pdf-core/constants";
 import { Dropzone } from "@ceropdf/ui";
 
 import { useDocumentStore } from "@/stores/document-store";
@@ -57,7 +57,7 @@ export function SingleDocGridWorkspace({
   return (
     <div className="relative flex min-h-dvh flex-col bg-background">
       <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_50%_at_50%_-10%,rgb(240_168_140/0.07),transparent_55%),radial-gradient(ellipse_70%_40%_at_100%_0%,rgb(52_211_153/0.05),transparent_45%)]"
+        className="pointer-events-none absolute inset-0 bg-ambient-glow"
         aria-hidden
       />
       <div className="relative z-10 flex min-h-dvh flex-col">
@@ -84,7 +84,7 @@ export function SingleDocGridWorkspace({
                     type="button"
                     disabled={busy}
                     onClick={() => void exportPdf()}
-                    className="inline-flex min-h-10 min-w-[120px] items-center justify-center rounded-md bg-gradient-to-b from-primary to-[#c97d62] px-5 text-sm font-semibold text-primary-foreground transition hover:from-primary-hover hover:to-[#dba48e] focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-45"
+                    className="inline-flex min-h-10 min-w-[120px] items-center justify-center rounded-md bg-gradient-to-b from-primary to-primary-gradient px-5 text-sm font-semibold text-primary-foreground transition hover:from-primary-hover hover:to-primary-gradient-hover focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-45"
                   >
                     {busy ? "Procesando…" : exportLabel}
                   </button>

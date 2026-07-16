@@ -6,13 +6,18 @@ import {
   isBenignPdfPreviewError,
   loadPdfJsDocument,
 } from "@ceropdf/pdf-render";
-import { readDocumentBytes } from "@ceropdf/pdf-core";
+import { readDocumentBytes } from "@ceropdf/pdf-core/storage";
 
 import { useDocumentStore } from "@/stores/document-store";
 import { useEditStore, type EditTool } from "@/stores/edit-store";
 
 const DEFAULT_TEXT_FONT_SIZE = 14;
 const DEFAULT_TEXT = "Texto";
+// Annotation default colors are export DATA, not design tokens: they are baked
+// into the output PDF by pdf-lib (hexToColor in packages/pdf-core/src/annotate.ts),
+// which cannot resolve CSS vars. Kept as literal hex on purpose — stroke/text
+// mirror --primary / --background; highlight is an annotation-specific yellow.
+const DEFAULT_TEXT_COLOR = "#111316";
 const DEFAULT_RECT_STROKE = "#f0a88c";
 const DEFAULT_HIGHLIGHT_COLOR = "#facc15";
 
@@ -73,6 +78,13 @@ export function EditCanvas() {
   );
   const [renderError, setRenderError] = useState<string | null>(null);
   const dragRef = useRef<Drag>(null);
+  // Coalesce annotation drag writes to one store update per frame (raw pointermove
+  // can fire at 120+ Hz; each write maps the whole annotations array + re-renders).
+  const rafRef = useRef<number | null>(null);
+  const pendingPatchRef = useRef<{
+    id: string;
+    patch: { x: number; y: number } | { w: number; h: number };
+  } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -146,6 +158,12 @@ export function EditCanvas() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [selectedAnnotationId, removeAnnotation, selectAnnotation]);
 
+  useEffect(() => {
+    return () => {
+      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
+
   const pageAnnotations = useMemo(
     () => annotations.filter((a) => a.page === activePageIndex),
     [annotations, activePageIndex],
@@ -164,7 +182,7 @@ export function EditCanvas() {
           h: 0.04,
           text: DEFAULT_TEXT,
           fontSize: DEFAULT_TEXT_FONT_SIZE,
-          color: "#111316",
+          color: DEFAULT_TEXT_COLOR,
         });
       } else if (tool === "rect") {
         addAnnotation({
@@ -240,23 +258,33 @@ export function EditCanvas() {
     }
   };
 
+  const flushPendingDrag = () => {
+    rafRef.current = null;
+    const pending = pendingPatchRef.current;
+    pendingPatchRef.current = null;
+    if (pending) updateAnnotation(pending.id, pending.patch);
+  };
+
   const onAnnotationPointerMove = (e: React.PointerEvent) => {
     const drag = dragRef.current;
     if (!drag || !canvasSize) return;
-    const dxPx = e.clientX - drag.startX;
-    const dyPx = e.clientY - drag.startY;
-    const dxNorm = dxPx / canvasSize.w;
-    const dyNorm = dyPx / canvasSize.h;
-    if (drag.kind === "move") {
-      updateAnnotation(drag.id, {
-        x: clamp01(drag.annStartX + dxNorm),
-        y: clamp01(drag.annStartY + dyNorm),
-      });
-    } else {
-      updateAnnotation(drag.id, {
-        w: clamp01(Math.max(0.02, drag.annStartW + dxNorm)),
-        h: clamp01(Math.max(0.015, drag.annStartH + dyNorm)),
-      });
+    const dxNorm = (e.clientX - drag.startX) / canvasSize.w;
+    const dyNorm = (e.clientY - drag.startY) / canvasSize.h;
+    pendingPatchRef.current = {
+      id: drag.id,
+      patch:
+        drag.kind === "move"
+          ? {
+              x: clamp01(drag.annStartX + dxNorm),
+              y: clamp01(drag.annStartY + dyNorm),
+            }
+          : {
+              w: clamp01(Math.max(0.02, drag.annStartW + dxNorm)),
+              h: clamp01(Math.max(0.015, drag.annStartH + dyNorm)),
+            },
+    };
+    if (rafRef.current == null) {
+      rafRef.current = requestAnimationFrame(flushPendingDrag);
     }
   };
 
@@ -265,6 +293,12 @@ export function EditCanvas() {
       (e.target as HTMLElement).releasePointerCapture?.(e.pointerId);
       dragRef.current = null;
     }
+    // Cancel any queued frame and commit the final position synchronously.
+    if (rafRef.current != null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+    flushPendingDrag();
   };
 
   const cursorClass =
@@ -326,8 +360,8 @@ export function EditCanvas() {
                         ...styleBase,
                         fontSize: `${fontSizePx}px`,
                         color: ann.color,
-                        background: "rgba(255,255,255,0.85)",
-                        border: "1px dashed rgba(240,168,140,0.85)",
+                        background: "var(--edit-scrim)",
+                        border: "1px dashed var(--edit-outline)",
                         padding: "0 2px",
                         outline: "none",
                       }}
@@ -372,7 +406,7 @@ export function EditCanvas() {
                       background: ann.fill ?? "transparent",
                       cursor: "move",
                       boxShadow: isSelected
-                        ? "0 0 0 2px rgba(240,168,140,0.45)"
+                        ? "0 0 0 2px var(--edit-ring)"
                         : "none",
                     }}
                   >
@@ -404,7 +438,7 @@ export function EditCanvas() {
                     opacity: 0.35,
                     cursor: "move",
                     boxShadow: isSelected
-                      ? "0 0 0 2px rgba(240,168,140,0.55)"
+                      ? "0 0 0 2px var(--edit-ring-strong)"
                       : "none",
                   }}
                 >

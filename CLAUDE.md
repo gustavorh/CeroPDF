@@ -18,7 +18,7 @@ PDF editor free, local-first, portafolio personal. **No es un SaaS comercial** �
 ## Workspaces
 
 - `apps/web/` — Next.js standalone (sirve la UI, expone proxies `/api/heavy/*`).
-- `apps/heavy/` — Sidecar Hono + Ghostscript + qpdf + LibreOffice en Docker. Sólo accesible vía red interna `ceropdf-internal`.
+- `apps/heavy/` — Sidecar Hono + Ghostscript + LibreOffice en Docker. Sólo accesible vía red interna `ceropdf-internal`.
 - `packages/pdf-core/` — Operaciones puras sobre `pdf-lib` (merge, split, constants, storage types). Sin React. Testable con Vitest.
 - `packages/pdf-render/` — Wrapper de `pdfjs-dist` (cache, lazy load, errores benignos).
 - `packages/ui/` — Primitivos compartidos (BrandMark, Dropzone genérico).
@@ -47,8 +47,8 @@ El `postinstall` de `apps/web/package.json` copia `pdf.worker.min.mjs` a `public
 
 1. **Default = 100% client-side.** El PDF del usuario nunca sale del navegador a menos que la herramienta lo requiera explícitamente y el usuario lo apruebe.
 2. **Server-side opt-in**: si una tool necesita backend (OCR pesado, conversión Word/Excel, compresión Ghostscript), debe (a) tener un banner de consentimiento granular, (b) usar TTL agresivo en R2, (c) hacer delete-on-completion, (d) actualizar este CLAUDE.md con la nueva tool y su modo. Sin excepciones.
-3. **Límites duros**: 250 MB por archivo, 500 páginas combinadas. Ver `apps/web/src/lib/constants.ts` (`MAX_FILE_BYTES`, `MAX_COMBINED_PAGES`).
-4. **pdf.js worker mismo origen**: ver `apps/web/src/lib/pdf/pdfjs-config.ts`. No mover a CDN.
+3. **Límites duros**: 250 MB por archivo, 500 páginas combinadas. Ver `packages/pdf-core/src/constants.ts` (`MAX_FILE_BYTES`, `MAX_COMBINED_PAGES`).
+4. **pdf.js worker mismo origen**: ver `packages/pdf-render/src/config.ts`. No mover a CDN.
 5. **CSP narrow**: ampliar `apps/web/next.config.ts` solo intencionalmente, host por host, no globs.
 
 ## Mapa del código
@@ -71,6 +71,7 @@ apps/
 │   │   │   ├── extract-pages/page.tsx# tool: extraer páginas (client-side, page-grid)
 │   │   │   ├── crop/page.tsx        # tool: recortar páginas (client-side, canvas propio)
 │   │   │   ├── resize/page.tsx      # tool: redimensionar páginas (client-side, page-grid)
+│   │   │   ├── edit/page.tsx        # tool: anotar PDF — text/rect/highlight (client-side, canvas propio)
 │   │   │   ├── privacy/page.tsx  # contrato de privacidad
 │   │   │   └── security/page.tsx # contrato de seguridad
 │   │   ├── api/heavy/*       # proxies internos al sidecar (sin locale)
@@ -87,6 +88,13 @@ apps/
 │   │   ├── organize-workspace.tsx     # shell del tool organize (client-side, page-grid)
 │   │   ├── remove-pages-workspace.tsx # shell del tool remove-pages (client-side, page-grid)
 │   │   ├── extract-pages-workspace.tsx# shell del tool extract-pages (client-side, page-grid)
+│   │   ├── crop-workspace.tsx         # shell del tool crop (client-side, canvas propio)
+│   │   ├── crop-canvas.tsx            # canvas de recorte (dibujar + mover/redimensionar el rect)
+│   │   ├── resize-workspace.tsx       # shell del tool resize (client-side, page-grid)
+│   │   ├── edit-workspace.tsx         # shell del tool edit (client-side, anotaciones)
+│   │   ├── edit-canvas.tsx            # canvas de anotaciones (text/rect/highlight, drag/resize, rAF)
+│   │   ├── edit-toolbar.tsx           # barra de herramientas del editor (tool + exportar)
+│   │   ├── edit-page-nav.tsx          # navegación de páginas del editor
 │   │   ├── server-consent-banner.tsx # opt-in para herramientas server-side
 │   │   ├── analytics.tsx             # tracker privacy-first (env-driven)
 │   │   ├── canvas-*                  # UI del estado canvas del merge tool
@@ -101,7 +109,8 @@ apps/
 │   │   ├── document-store.ts   # documents + uiPhase + lastError (compartido)
 │   │   ├── selection-store.ts  # selección de ids (tool-agnostic)
 │   │   ├── merge-store.ts      # estado del tool merge (compone los anteriores)
-│   │   └── rotate/organize/remove-pages/extract-pages-store.ts  # instancias de createPageGridStore
+│   │   ├── {rotate,organize,remove-pages,extract-pages,crop,resize}-store.ts  # instancias de createPageGridStore
+│   │   └── edit-store.ts       # estado del tool edit (anotaciones, single-doc, bespoke)
 │   ├── types/workspace.ts      # WorkspaceDocument, PageEntry
 │   ├── lib/                    # format-bytes, project-display-name
 │   │   ├── page-grid/          # createPageGridStore (use-page-grid), build-export
@@ -109,14 +118,15 @@ apps/
 │   └── scripts/
 │       ├── copy-pdf-worker.cjs    # postinstall: pdf.js worker → public/
 │       └── copy-ffmpeg-core.cjs   # postinstall: ffmpeg core → public/ffmpeg/{st,esm}
-└── heavy/                      # sidecar Hono + Ghostscript + qpdf + LibreOffice
-    └── src/server.ts           # endpoints /compress, /unlock, /office-to-pdf, /health
+└── heavy/                      # sidecar Hono + Ghostscript + LibreOffice
+    └── src/server.ts           # endpoints /compress, /office-to-pdf, /health
 
 packages/
 ├── pdf-core/src/
 │   ├── constants.ts            # MAX_FILE_BYTES, MAX_COMBINED_PAGES
 │   ├── merge.ts                # exportMergedPdf (async getter)
 │   ├── split.ts                # parseRanges, splitPdfByRanges, splitPdfByPage
+│   ├── annotate.ts             # flattenAnnotations (edit tool → pdf-lib), Annotation types
 │   ├── storage/types.ts        # DocumentBacking (memory | opfs) + readDocumentBytes
 │   └── storage/opfs.ts         # write/delete/clear OPFS files
 ├── pdf-render/src/             # pdfjs config + cache + load + error helpers

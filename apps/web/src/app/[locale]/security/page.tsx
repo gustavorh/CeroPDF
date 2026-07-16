@@ -80,7 +80,8 @@ export default function SecurityPage() {
         <h2>Operaciones que tocan servidor (opt-in)</h2>
         <p>
           Cuando una herramienta requiere binarios nativos (por ejemplo,
-          compresión real con Ghostscript o desbloqueo con qpdf), el flujo es:
+          compresión real con Ghostscript o conversión de Office con
+          LibreOffice), el flujo es:
         </p>
         <ul>
           <li>

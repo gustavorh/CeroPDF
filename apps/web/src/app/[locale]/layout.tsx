@@ -107,6 +107,7 @@ export async function generateMetadata({
 }
 
 export const viewport: Viewport = {
+  // Literal hex required: browser-chrome meta, mirrors --background (globals.css).
   themeColor: "#111316",
   colorScheme: "dark",
 };

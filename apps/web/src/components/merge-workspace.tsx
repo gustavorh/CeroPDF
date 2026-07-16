@@ -1,6 +1,7 @@
 "use client";
 
 import { useDocumentStore } from "@/stores/document-store";
+import { useMergeStore } from "@/stores/merge-store";
 
 import { CanvasBottomPill } from "./canvas-bottom-pill";
 import { CanvasDocuments } from "./canvas-documents";
@@ -13,11 +14,12 @@ import { StatusStrip } from "./status-strip";
 import { WorkspaceDropzone } from "./workspace-dropzone";
 
 export function MergeWorkspace() {
-  const documents = useDocumentStore((s) => s.documents);
   const uiPhase = useDocumentStore((s) => s.uiPhase);
   const thumbnailRenderCount = useDocumentStore((s) => s.thumbnailRenderCount);
 
-  const hasDocs = documents.length > 0;
+  // Gate off merge-store's own page entries, not the shared document-store count
+  // (a tool-agnostic store could hold stale docs from another workspace).
+  const hasDocs = useMergeStore((s) => s.pageEntries.length > 0);
 
   const exportModalVisible =
     uiPhase === "merging" || uiPhase === "export_success";
@@ -34,7 +36,7 @@ export function MergeWorkspace() {
   return (
     <div className="relative flex min-h-dvh flex-col bg-background">
       <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_50%_at_50%_-10%,rgb(240_168_140/0.07),transparent_55%),radial-gradient(ellipse_70%_40%_at_100%_0%,rgb(52_211_153/0.05),transparent_45%)]"
+        className="pointer-events-none absolute inset-0 bg-ambient-glow"
         aria-hidden
       />
       <div className="relative z-10 flex min-h-dvh flex-col">

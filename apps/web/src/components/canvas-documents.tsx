@@ -46,7 +46,7 @@ export function CanvasDocuments() {
       {documents.map((doc, index) => (
         <div key={doc.id} className="space-y-4">
           <div
-            className="-mx-4 flex flex-wrap items-stretch gap-0 border-y border-outline-variant/40 bg-surface-container/95 shadow-[inset_0_1px_0_0_rgb(244_244_245/0.06)] sm:-mx-6"
+            className="-mx-4 flex flex-wrap items-stretch gap-0 border-y border-outline-variant/40 bg-surface-container/95 shadow-[inset_0_1px_0_0_var(--edge-highlight)] sm:-mx-6"
             onDragOver={handleDragOver}
             onDrop={() => handleDrop(index)}
           >

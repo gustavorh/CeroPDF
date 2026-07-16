@@ -1,13 +1,14 @@
 "use client";
 
 import {
+  memo,
   useCallback,
   useEffect,
   useMemo,
   useState,
 } from "react";
 
-import { readDocumentBytes } from "@ceropdf/pdf-core";
+import { readDocumentBytes } from "@ceropdf/pdf-core/storage";
 import { useDocumentStore } from "@/stores/document-store";
 import { useSelectionStore } from "@/stores/selection-store";
 import type { PageEntry } from "@/types/workspace";
@@ -33,7 +34,7 @@ type ThumbnailGridItemProps = {
   capabilities: Capabilities;
 };
 
-function ThumbnailGridItem({
+const ThumbnailGridItem = memo(function ThumbnailGridItem({
   documentId,
   bytes,
   entry,
@@ -76,7 +77,7 @@ function ThumbnailGridItem({
       />
     </li>
   );
-}
+});
 
 export function PageGrid({ documentId, store: useStore, capabilities }: PageGridProps) {
   const documents = useDocumentStore((s) => s.documents);

@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 
-import { MAX_FILE_BYTES } from "@ceropdf/pdf-core";
+import { MAX_FILE_BYTES } from "@ceropdf/pdf-core/constants";
 import { Dropzone } from "@ceropdf/ui";
 
 import { useDocumentStore } from "@/stores/document-store";
@@ -35,7 +35,7 @@ export function EditWorkspace() {
   return (
     <div className="relative flex min-h-dvh flex-col bg-background">
       <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_50%_at_50%_-10%,rgb(240_168_140/0.07),transparent_55%),radial-gradient(ellipse_70%_40%_at_100%_0%,rgb(52_211_153/0.05),transparent_45%)]"
+        className="pointer-events-none absolute inset-0 bg-ambient-glow"
         aria-hidden
       />
       <div className="relative z-10 flex min-h-dvh flex-col">

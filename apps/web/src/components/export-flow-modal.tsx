@@ -135,7 +135,7 @@ export function ExportFlowModal() {
               </p>
               <button
                 type="button"
-                className="mt-8 flex w-full min-h-14 items-center justify-center rounded-lg bg-gradient-to-b from-primary to-[#c97d62] px-6 text-base font-semibold text-primary-foreground shadow-[0_24px_48px_-16px_rgb(17_19_22/0.5)] transition hover:from-primary-hover hover:to-[#dba48e] focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                className="mt-8 flex w-full min-h-14 items-center justify-center rounded-lg bg-gradient-to-b from-primary to-primary-gradient px-6 text-base font-semibold text-primary-foreground shadow-[0_24px_48px_-16px_var(--shadow-ambient-strong)] transition hover:from-primary-hover hover:to-primary-gradient-hover focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                 onClick={() => resetWorkspace()}
               >
                 Volver a empezar

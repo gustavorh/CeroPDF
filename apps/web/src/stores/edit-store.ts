@@ -1,7 +1,7 @@
 import { create } from "zustand";
 
 import type { Annotation } from "@ceropdf/pdf-core";
-import { readDocumentBytes } from "@ceropdf/pdf-core";
+import { readDocumentBytes } from "@ceropdf/pdf-core/storage";
 
 import { useDocumentStore } from "./document-store";
 
@@ -100,8 +100,9 @@ export const useEditStore = create<EditState>()((set, get) => ({
       return;
     }
 
-    setUiPhase("merging");
+    // Clear any prior error before entering the export phase (no stale-error flash).
     useDocumentStore.getState().clearError();
+    setUiPhase("merging");
 
     try {
       const { flattenAnnotations } = await import("@ceropdf/pdf-core");

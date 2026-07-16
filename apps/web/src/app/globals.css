@@ -32,6 +32,9 @@
   --primary-hover: #ffc9b5;
   --primary-muted: rgb(240 168 140 / 0.16);
   --primary-container: #8b4d3a;
+  /* Subtle light-over-matte gradient stops for primary CTAs (bottom + hover) */
+  --primary-gradient: #c97d62;
+  --primary-gradient-hover: #dba48e;
 
   /* Secondary surfaces (muted warm) */
   --secondary-container: #2a2624;
@@ -56,6 +59,15 @@
 
   /* Ambient shadow (floating layers) */
   --shadow-ambient: rgb(17 19 22 / 0.45);
+  --shadow-ambient-strong: rgb(17 19 22 / 0.5);
+  /* Hairline top-edge highlight (foreground @ ~6%) */
+  --edge-highlight: rgb(244 244 245 / 0.06);
+
+  /* Edit-canvas annotation affordances (selection UI over the white page) */
+  --edit-scrim: rgb(255 255 255 / 0.85);
+  --edit-outline: rgb(240 168 140 / 0.85);
+  --edit-ring: rgb(240 168 140 / 0.45);
+  --edit-ring-strong: rgb(240 168 140 / 0.55);
 }
 
 @theme inline {
@@ -77,6 +89,8 @@
   --color-primary-hover: var(--primary-hover);
   --color-primary-muted: var(--primary-muted);
   --color-primary-container: var(--primary-container);
+  --color-primary-gradient: var(--primary-gradient);
+  --color-primary-gradient-hover: var(--primary-gradient-hover);
   --color-secondary-container: var(--secondary-container);
   --color-on-secondary-container: var(--on-secondary-container);
   --color-trust: var(--trust);
@@ -134,6 +148,21 @@
   line-height: 1.25;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+}
+
+/* Ambient primary/trust glow behind tool canvases (shared across workspaces) */
+@utility bg-ambient-glow {
+  background-image:
+    radial-gradient(
+      ellipse 90% 50% at 50% -10%,
+      rgb(240 168 140 / 0.07),
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 70% 40% at 100% 0%,
+      rgb(52 211 153 / 0.05),
+      transparent 45%
+    );
 }
 
 html {

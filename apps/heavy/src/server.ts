@@ -146,51 +146,6 @@ app.post("/compress", async (c) => {
 });
 
 /**
- * Removes the password of an encrypted PDF using qpdf. Caller passes the password via
- * the `X-Pdf-Password` header (URL-safe, server never logs it).
- */
-app.post("/unlock", async (c) => {
-  const password = c.req.header("X-Pdf-Password") ?? "";
-  if (!password) return c.json({ error: "missing_password" }, 400);
-
-  const bytes = await readRequestBytes(c.req.raw);
-  if (!bytes) return c.json({ error: "payload_too_large" }, 413);
-
-  return await withScratch("unlock", async ({ inPath, outPath, jobId }) => {
-    await writeFile(inPath, new Uint8Array(bytes));
-    const startedAt = Date.now();
-    try {
-      await execFileAsync(
-        "qpdf",
-        [`--password=${password}`, "--decrypt", inPath, outPath],
-        { timeout: COMMAND_TIMEOUT_MS },
-      );
-      const out = await readFile(outPath);
-      logEvent("unlock_ok", {
-        jobId,
-        inBytes: bytes.byteLength,
-        outBytes: out.byteLength,
-        durationMs: Date.now() - startedAt,
-      });
-      return pdfResponse(out, "unlocked.pdf");
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      const isPasswordError = /invalid password/i.test(message);
-      logEvent("unlock_fail", {
-        jobId,
-        inBytes: bytes.byteLength,
-        durationMs: Date.now() - startedAt,
-        reason: isPasswordError ? "invalid_password" : "other",
-      });
-      return c.json(
-        { error: isPasswordError ? "invalid_password" : "unlock_failed" },
-        isPasswordError ? 401 : 500,
-      );
-    }
-  });
-});
-
-/**
  * Converts an Office/OpenDocument file to PDF using headless LibreOffice. The
  * original extension is passed via the `ext` query so the temp input is named
  * correctly (soffice infers the source format from the extension). Each job gets

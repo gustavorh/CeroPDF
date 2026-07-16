@@ -1,15 +1,14 @@
 import { create } from "zustand";
 
+import { MAX_COMBINED_PAGES, MAX_FILE_BYTES } from "@ceropdf/pdf-core/constants";
+import type { DocumentBacking } from "@ceropdf/pdf-core/storage";
 import {
-  type DocumentBacking,
-  MAX_COMBINED_PAGES,
-  MAX_FILE_BYTES,
   OPFS_THRESHOLD_BYTES,
   clearOpfsDir,
   deleteOpfsFile,
   isOpfsSupported,
   writeOpfsFile,
-} from "@ceropdf/pdf-core";
+} from "@ceropdf/pdf-core/storage/opfs";
 import {
   clearPdfJsDocumentCache,
   invalidatePdfJsDocument,

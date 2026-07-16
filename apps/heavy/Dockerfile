@@ -17,14 +17,14 @@ COPY apps/heavy ./apps/heavy
 RUN npm run build -w heavy && \
     npm prune --omit=dev -w heavy --include-workspace-root
 
-# Runtime stage: alpine + ghostscript + qpdf + Node, no devDeps.
+# Runtime stage: alpine + ghostscript + Node, no devDeps.
 FROM node:20-alpine AS production
 
-# Ghostscript = real PDF compression. qpdf = password unlock.
+# Ghostscript = real PDF compression.
 # libreoffice (+ fonts) = Office/OpenDocument → PDF conversion. tini = clean signals.
 # NOTE: libreoffice adds ~0.5–1 GB to the image.
 RUN apk add --no-cache \
-        ghostscript qpdf tini \
+        ghostscript tini \
         libreoffice font-noto ttf-dejavu && \
     addgroup -g 1001 -S nodejs && \
     adduser -S -D -H -u 1001 -s /sbin/nologin -G nodejs -g nodejs appuser

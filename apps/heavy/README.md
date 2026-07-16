@@ -1,13 +1,12 @@
 # heavy
 
-Server-side sidecar for the CeroPDF tools that cannot run in the browser. Built with [Hono](https://hono.dev/) and packaged in Docker alongside Ghostscript, qpdf, and LibreOffice.
+Server-side sidecar for the CeroPDF tools that cannot run in the browser. Built with [Hono](https://hono.dev/) and packaged in Docker alongside Ghostscript and LibreOffice.
 
 This service is **internal only**: it is reachable solely from `web` over the `ceropdf-internal` Docker network (DNS `heavy:3001`) and is never published outside Docker. The web app proxies requests through `/api/heavy/*` to keep it that way.
 
 ## Endpoints
 
 - `POST /compress` — Ghostscript PDF compression.
-- `POST /unlock` — qpdf password removal.
 - `POST /office-to-pdf` — LibreOffice `soffice --headless --convert-to pdf`.
 - `GET /health` — liveness probe.
 

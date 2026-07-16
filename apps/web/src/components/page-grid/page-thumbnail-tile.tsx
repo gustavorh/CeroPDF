@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  memo,
   useEffect,
   useRef,
   useState,
@@ -111,7 +112,7 @@ function IconRotateCcw({ className }: { className?: string }) {
   );
 }
 
-export function PageThumbnailTile({
+export const PageThumbnailTile = memo(function PageThumbnailTile({
   documentId,
   bytes,
   entry,
@@ -319,4 +320,4 @@ export function PageThumbnailTile({
       </div>
     </div>
   );
-}
+});

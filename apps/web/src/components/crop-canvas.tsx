@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { readDocumentBytes } from "@ceropdf/pdf-core";
+import { readDocumentBytes } from "@ceropdf/pdf-core/storage";
 import { isBenignPdfPreviewError, loadPdfJsDocument } from "@ceropdf/pdf-render";
 
 import { useDocumentStore } from "@/stores/document-store";
@@ -12,12 +12,94 @@ function clamp01(v: number): number {
   return Math.min(1, Math.max(0, v));
 }
 
+/** Minimum crop size (normalized) so a resize can't collapse the rect. */
+const MIN_SIZE = 0.02;
+/** Hit radius (px) around a handle center for grabbing it. */
+const HANDLE_HIT_PX = 14;
+
+type Handle = "nw" | "ne" | "se" | "sw" | "n" | "e" | "s" | "w";
+
+// Corners first so they win hit-testing over the edge handles they overlap.
+const HANDLES: { id: Handle; cx: number; cy: number; cursor: string }[] = [
+  { id: "nw", cx: 0, cy: 0, cursor: "nwse-resize" },
+  { id: "ne", cx: 1, cy: 0, cursor: "nesw-resize" },
+  { id: "se", cx: 1, cy: 1, cursor: "nwse-resize" },
+  { id: "sw", cx: 0, cy: 1, cursor: "nesw-resize" },
+  { id: "n", cx: 0.5, cy: 0, cursor: "ns-resize" },
+  { id: "e", cx: 1, cy: 0.5, cursor: "ew-resize" },
+  { id: "s", cx: 0.5, cy: 1, cursor: "ns-resize" },
+  { id: "w", cx: 0, cy: 0.5, cursor: "ew-resize" },
+];
+
+const LEFT: Handle[] = ["nw", "w", "sw"];
+const RIGHT: Handle[] = ["ne", "e", "se"];
+const TOP: Handle[] = ["nw", "n", "ne"];
+const BOTTOM: Handle[] = ["sw", "s", "se"];
+
+type Drag =
+  | { kind: "draw"; sx: number; sy: number }
+  | { kind: "move"; px: number; py: number; base: DisplayRect }
+  | { kind: "resize"; handle: Handle; base: DisplayRect };
+
+type Point = { x: number; y: number };
+
+function rectFromCorners(sx: number, sy: number, px: number, py: number): DisplayRect {
+  const x = clamp01(Math.min(sx, px));
+  const y = clamp01(Math.min(sy, py));
+  return {
+    x,
+    y,
+    w: Math.min(Math.abs(px - sx), 1 - x),
+    h: Math.min(Math.abs(py - sy), 1 - y),
+  };
+}
+
+function applyMove(base: DisplayRect, dx: number, dy: number): DisplayRect {
+  return {
+    x: Math.min(Math.max(base.x + dx, 0), 1 - base.w),
+    y: Math.min(Math.max(base.y + dy, 0), 1 - base.h),
+    w: base.w,
+    h: base.h,
+  };
+}
+
+function applyResize(base: DisplayRect, handle: Handle, px: number, py: number): DisplayRect {
+  let l = base.x;
+  let t = base.y;
+  let r = base.x + base.w;
+  let b = base.y + base.h;
+  if (LEFT.includes(handle)) l = Math.min(clamp01(px), r - MIN_SIZE);
+  if (RIGHT.includes(handle)) r = Math.max(clamp01(px), l + MIN_SIZE);
+  if (TOP.includes(handle)) t = Math.min(clamp01(py), b - MIN_SIZE);
+  if (BOTTOM.includes(handle)) b = Math.max(clamp01(py), t + MIN_SIZE);
+  return { x: l, y: t, w: r - l, h: b - t };
+}
+
+function insideRect(p: Point, r: DisplayRect): boolean {
+  return p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h;
+}
+
+function hitHandle(
+  p: Point,
+  r: DisplayRect,
+  size: { w: number; h: number },
+): Handle | null {
+  const tx = HANDLE_HIT_PX / size.w;
+  const ty = HANDLE_HIT_PX / size.h;
+  for (const h of HANDLES) {
+    const hx = r.x + h.cx * r.w;
+    const hy = r.y + h.cy * r.h;
+    if (Math.abs(p.x - hx) <= tx && Math.abs(p.y - hy) <= ty) return h.id;
+  }
+  return null;
+}
+
 type Props = {
   documentId: string;
   pageIndex: number;
   /** Committed crop in display coords (top-left, 0–1), or null. */
   cropRect: DisplayRect | null;
-  /** Called once on pointer-up with the drawn rect (display coords). */
+  /** Called on pointer-up with the drawn/moved/resized rect (display coords). */
   onChange: (rect: DisplayRect) => void;
 };
 
@@ -28,11 +110,12 @@ export function CropCanvas({ documentId, pageIndex, cropRect, onChange }: Props)
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const renderTaskRef = useRef<{ cancel: () => void } | null>(null);
-  const startRef = useRef<{ x: number; y: number } | null>(null);
+  const dragRef = useRef<Drag | null>(null);
   const [bytes, setBytes] = useState<ArrayBuffer | null>(null);
   const [canvasSize, setCanvasSize] = useState<{ w: number; h: number } | null>(null);
   const [renderError, setRenderError] = useState<string | null>(null);
   const [draft, setDraft] = useState<DisplayRect | null>(null);
+  const [cursor, setCursor] = useState("crosshair");
 
   useEffect(() => {
     let cancelled = false;
@@ -85,7 +168,7 @@ export function CropCanvas({ documentId, pageIndex, cropRect, onChange }: Props)
     };
   }, [bytes, documentId, pageIndex]);
 
-  const norm = (e: React.PointerEvent) => {
+  const norm = (e: React.PointerEvent): Point => {
     const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
     return {
       x: clamp01((e.clientX - r.left) / r.width),
@@ -97,29 +180,67 @@ export function CropCanvas({ documentId, pageIndex, cropRect, onChange }: Props)
     if (!canvasSize) return;
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     const p = norm(e);
-    startRef.current = p;
+    const rect = draft ?? cropRect;
+    if (rect) {
+      const handle = hitHandle(p, rect, canvasSize);
+      if (handle) {
+        dragRef.current = { kind: "resize", handle, base: rect };
+        setDraft(rect);
+        return;
+      }
+      if (insideRect(p, rect)) {
+        dragRef.current = { kind: "move", px: p.x, py: p.y, base: rect };
+        setDraft(rect);
+        return;
+      }
+    }
+    dragRef.current = { kind: "draw", sx: p.x, sy: p.y };
     setDraft({ x: p.x, y: p.y, w: 0, h: 0 });
   };
 
-  const onPointerMove = (e: React.PointerEvent) => {
-    const start = startRef.current;
-    if (!start) return;
+  const updateHoverCursor = (e: React.PointerEvent) => {
+    if (!canvasSize) return;
     const p = norm(e);
-    setDraft({
-      x: Math.min(start.x, p.x),
-      y: Math.min(start.y, p.y),
-      w: Math.abs(p.x - start.x),
-      h: Math.abs(p.y - start.y),
-    });
+    const rect = draft ?? cropRect;
+    let next = "crosshair";
+    if (rect) {
+      const handle = hitHandle(p, rect, canvasSize);
+      if (handle) next = HANDLES.find((h) => h.id === handle)!.cursor;
+      else if (insideRect(p, rect)) next = "move";
+    }
+    if (next !== cursor) setCursor(next);
+  };
+
+  const onPointerMove = (e: React.PointerEvent) => {
+    const drag = dragRef.current;
+    if (!drag) {
+      updateHoverCursor(e);
+      return;
+    }
+    const p = norm(e);
+    if (drag.kind === "draw") {
+      setDraft(rectFromCorners(drag.sx, drag.sy, p.x, p.y));
+    } else if (drag.kind === "move") {
+      setDraft(applyMove(drag.base, p.x - drag.px, p.y - drag.py));
+    } else {
+      setDraft(applyResize(drag.base, drag.handle, p.x, p.y));
+    }
   };
 
   const onPointerUp = (e: React.PointerEvent) => {
-    const start = startRef.current;
-    startRef.current = null;
+    const drag = dragRef.current;
+    dragRef.current = null;
     (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
     const d = draft;
     setDraft(null);
-    if (start && d && d.w > 0.01 && d.h > 0.01) onChange(d);
+    if (!drag || !d) return;
+    // Draw needs a minimum footprint to count; move/resize always commit
+    // (resize already enforces MIN_SIZE, move preserves the existing size).
+    if (drag.kind === "draw") {
+      if (d.w > 0.01 && d.h > 0.01) onChange(d);
+    } else {
+      onChange(d);
+    }
   };
 
   const shown = draft ?? cropRect;
@@ -134,7 +255,8 @@ export function CropCanvas({ documentId, pageIndex, cropRect, onChange }: Props)
         />
         {canvasSize ? (
           <div
-            className="absolute inset-0 cursor-crosshair"
+            className="absolute inset-0"
+            style={{ cursor }}
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
@@ -150,10 +272,19 @@ export function CropCanvas({ documentId, pageIndex, cropRect, onChange }: Props)
                   top: `${shown.y * 100}%`,
                   width: `${shown.w * 100}%`,
                   height: `${shown.h * 100}%`,
-                  boxShadow: "0 0 0 9999px rgba(17,19,22,0.45)",
+                  boxShadow: "0 0 0 9999px var(--shadow-ambient)",
                 }}
                 aria-hidden
-              />
+              >
+                {HANDLES.map((h) => (
+                  <span
+                    key={h.id}
+                    className="absolute h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-sm border border-primary bg-card"
+                    style={{ left: `${h.cx * 100}%`, top: `${h.cy * 100}%` }}
+                    aria-hidden
+                  />
+                ))}
+              </div>
             ) : null}
           </div>
         ) : null}

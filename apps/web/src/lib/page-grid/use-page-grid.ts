@@ -1,6 +1,7 @@
 import { create } from "zustand";
 
-import { readDocumentBytes, type CropRect, type ResizeDirective } from "@ceropdf/pdf-core";
+import { readDocumentBytes } from "@ceropdf/pdf-core/storage";
+import type { CropRect, ResizeDirective } from "@ceropdf/pdf-core";
 
 import { triggerDownload } from "@/lib/trigger-download";
 import {
@@ -217,8 +218,9 @@ export function createPageGridStore(config: PageGridConfig) {
         return;
       }
 
-      setUiPhase(config.exportPhase);
+      // Clear any prior error before entering the export phase (no stale-error flash).
       useDocumentStore.getState().clearError();
+      setUiPhase(config.exportPhase);
 
       try {
         const { exportMergedPdf } = await import("@ceropdf/pdf-core");

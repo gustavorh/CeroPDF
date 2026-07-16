@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 
-import { MAX_COMBINED_PAGES, MAX_FILE_BYTES } from "@ceropdf/pdf-core";
+import { MAX_COMBINED_PAGES, MAX_FILE_BYTES } from "@ceropdf/pdf-core/constants";
 import { Dropzone, type DropzoneVariant } from "@ceropdf/ui";
 
 import { useMergeStore } from "@/stores/merge-store";

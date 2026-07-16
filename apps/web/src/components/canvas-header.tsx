@@ -103,7 +103,7 @@ export function CanvasHeader() {
             type="button"
             disabled={busy}
             onClick={() => void exportPdf()}
-            className="inline-flex min-h-10 min-w-[140px] items-center justify-center rounded-md bg-gradient-to-b from-primary to-[#c97d62] px-5 text-sm font-semibold text-primary-foreground shadow-[0_18px_40px_-14px_rgb(17_19_22/0.45)] transition hover:from-primary-hover hover:to-[#dba48e] focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-45"
+            className="inline-flex min-h-10 min-w-[140px] items-center justify-center rounded-md bg-gradient-to-b from-primary to-primary-gradient px-5 text-sm font-semibold text-primary-foreground shadow-[0_18px_40px_-14px_var(--shadow-ambient)] transition hover:from-primary-hover hover:to-primary-gradient-hover focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-45"
           >
             Exportar PDF
           </button>

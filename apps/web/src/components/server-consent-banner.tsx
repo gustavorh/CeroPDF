@@ -43,7 +43,7 @@ export function ServerConsentBanner({
           “{toolLabel}” necesita un servidor temporal
         </h2>
         <p className="mt-3 text-pretty text-sm leading-relaxed text-muted-foreground sm:text-base">
-          Esta herramienta usa binarios (Ghostscript, qpdf) que no corren en el
+          Esta herramienta usa binarios (Ghostscript, LibreOffice) que no corren en el
           navegador. Tu PDF se sube a un contenedor interno de CeroPDF que{" "}
           <strong className="text-foreground">no es público</strong> y se elimina
           en cuanto descargas el resultado. No queda traza en logs.
@@ -74,7 +74,7 @@ export function ServerConsentBanner({
               }
               setGranted(true);
             }}
-            className="inline-flex min-h-10 items-center justify-center rounded-md bg-gradient-to-b from-primary to-[#c97d62] px-5 text-sm font-semibold text-primary-foreground transition hover:from-primary-hover hover:to-[#dba48e] focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            className="inline-flex min-h-10 items-center justify-center rounded-md bg-gradient-to-b from-primary to-primary-gradient px-5 text-sm font-semibold text-primary-foreground transition hover:from-primary-hover hover:to-primary-gradient-hover focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
           >
             Entiendo, continuar
           </button>
